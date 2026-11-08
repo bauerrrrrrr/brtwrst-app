@@ -1,17 +1,44 @@
-# Release bauen und veröffentlichen: git tag v0.1.1 && git push origin v0.1.1
-# oder auf GitHub: Releases → "Draft a new release" → Tag v0.1.1 neu anlegen → "Publish release".
-# (Version in package.json muss zum Tag passen.)
+# Release: Version in package.json erhöhen und auf main pushen. Gibt es zu dieser Version noch keinen
+# Tag, baut der Workflow alles, legt Tag und Release selbst an. Ein von Hand gepushter Tag v1.2.3 geht auch.
 name: Release
 
 on:
   push:
+    branches: [main]
     tags: ['v*.*.*']
 
 permissions:
   contents: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.v.outputs.tag }}
+      go: ${{ steps.v.outputs.go }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        name: Neue Version?
+        run: |
+          TAG=v$(node -p "require('./package.json').version")
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            [ "$GITHUB_REF_NAME" = "$TAG" ] || { echo "::error::Tag $GITHUB_REF_NAME passt nicht zu package.json ($TAG)"; exit 1; }
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          elif git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
+            echo "$TAG gibt es schon – kein Release."; echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Neue Version $TAG – Release wird gebaut."; echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+
   test:
+    needs: version
+    if: needs.version.outputs.go == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,10 +46,6 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm test
-      - name: Tag passt zu package.json
-        run: |
-          V=$(node -p "require('./package.json').version")
-          [ "v$V" = "$GITHUB_REF_NAME" ] || { echo "::error::Tag $GITHUB_REF_NAME passt nicht zu package.json ($V)"; exit 1; }
 
   build:
     needs: test
@@ -60,7 +83,7 @@ jobs:
   # Flatpak bauen, signieren und als Repo auf GitHub Pages veröffentlichen – vor dem Release,
   # damit das Repo die neue Version schon hat, wenn die Apps das Manifest sehen.
   flatpak:
-    needs: build
+    needs: [version, build]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -92,14 +115,16 @@ jobs:
       - id: pages
         uses: actions/configure-pages@v5
       - name: Bauen und signieren
-        run: scripts/flatpak-build.sh "${GITHUB_REF_NAME#v}" site "$GPG_ID" "${{ steps.pages.outputs.base_url }}/"
+        env:
+          TAG: ${{ needs.version.outputs.tag }}
+        run: scripts/flatpak-build.sh "${TAG#v}" site "$GPG_ID" "${{ steps.pages.outputs.base_url }}/"
       - uses: actions/upload-pages-artifact@v3
         with: { path: site }
       - id: deploy
         uses: actions/deploy-pages@v4
 
   release:
-    needs: [build, flatpak]
+    needs: [version, build, flatpak]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -110,15 +135,17 @@ jobs:
       - name: Manifest erzeugen und signieren
         env:
           BRTWRST_SIGNING_KEY: ${{ secrets.BRTWRST_SIGNING_KEY }}
+          TAG: ${{ needs.version.outputs.tag }}
         run: |
-          V=${GITHUB_REF_NAME#v}
-          NOTES=$(git for-each-ref --format='%(contents:subject)' "refs/tags/$GITHUB_REF_NAME" 2>/dev/null || true)
+          V=${TAG#v}
+          NOTES=$(git log -1 --format=%s)
           node scripts/manifest.js rel "$V" "$NOTES"
       - name: Release veröffentlichen
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.version.outputs.tag }}
         run: |
-          V=${GITHUB_REF_NAME#v}
+          V=${TAG#v}
           cat > notes.md <<EOF
           **Windows:** \`BRTWRST-$V-win-x64.exe\` herunterladen und starten. Beim ersten Start warnt Windows ("Der Computer wurde durch Windows geschützt"): "Weitere Informationen" → "Trotzdem ausführen".
 
@@ -129,9 +156,9 @@ jobs:
           Updates werden signiert (manifest.json + manifest.json.sig, Ed25519) und von der App vor der Installation geprüft.
           EOF
           # Release schon von Hand angelegt (Tag über die GitHub-Seite)? Dann nur Dateien und Text ergänzen.
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" rel/* --clobber
-            gh release edit "$GITHUB_REF_NAME" --title "BRTWRST $V" --notes-file notes.md --draft=false
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" rel/* --clobber
+            gh release edit "$TAG" --title "BRTWRST $V" --notes-file notes.md --draft=false
           else
-            gh release create "$GITHUB_REF_NAME" rel/* --title "BRTWRST $V" --notes-file notes.md
+            gh release create "$TAG" rel/* --target "$GITHUB_SHA" --title "BRTWRST $V" --notes-file notes.md   # legt den Tag mit an
           fi

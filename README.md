@@ -58,9 +58,11 @@ npm run dist:win                            # Windows-Installer in dist/
 ## Releases und Updates
 
 ```sh
-npm version 0.1.1 --no-git-tag-version   # Version in package.json erhöhen
-git commit -am "Version 0.1.1" && git tag v0.1.1 && git push && git push origin v0.1.1
+npm version 0.1.2 --no-git-tag-version   # Version in package.json erhöhen
+git commit -am "BRTWRST 0.1.2: <was neu ist>" && git push
 ```
+
+Der Workflow merkt bei jedem Push auf main, ob es zur Version in `package.json` schon einen Tag gibt. Wenn nicht, baut er alles und legt Tag und Release selbst an. Die Betreffzeile des Commits wird zum Update-Text, den die App anzeigt. Ein von Hand gepushter Tag `v1.2.3` funktioniert weiterhin.
 
 GitHub Actions (`.github/workflows/release.yml`) baut dann:
 - **Tests:** Sie laufen zuerst.
