@@ -1,7 +1,7 @@
 // Wer darf was: nur Seiten von unserer Domain bekommen RCON und Scan, und die gehen nur an LAN-Adressen.
 'use strict';
 
-const START_URL = process.env.BRTWRST_URL || 'https://lan.brat.wurst.pw/';
+const START_URL = process.env.BRTWRST_URL || 'https://brat.wurst.pw/lan/';   // lan.brat.wurst.pw hat derzeit kein HTTPS
 const ALLOWED = [
   { origin: 'https://lan.brat.wurst.pw', path: '/' },
   { origin: 'https://brat.wurst.pw', path: '/lan/' },

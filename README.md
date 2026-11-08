@@ -2,7 +2,7 @@
 
 Das Team-Bratwurst-Intranet als App für **Windows, Linux und macOS**, mit direktem **RCON** und **LAN-Scan** für die CS2-Server auf der MTA-LAN.
 
-Die App ist ein Rahmen um die Website <https://lan.brat.wurst.pw/>. Inhalte, Login und Daten kommen live von dort. Zusätzlich kann die App, was ein Browser nicht darf:
+Die App ist ein Rahmen um die Website <https://brat.wurst.pw/lan/>. Inhalte, Login und Daten kommen live von dort. Zusätzlich kann die App, was ein Browser nicht darf:
 
 - **RCON:** Befehle per TCP an die CS2-Server schicken, die Antworten erscheinen auf der Seite. Dafür braucht es weder rcon-cli noch PowerShell oder eine Einrichtung.
 - **LAN-Scan:** alle Server per A2S (UDP) abfragen, dazu den Mappool per RCON von einem Server.
@@ -33,7 +33,7 @@ if (window.brtwrst) {
 
 ```sh
 npm install
-npm start                                   # lädt https://lan.brat.wurst.pw/
+npm start                                   # lädt https://brat.wurst.pw/lan/
 BRTWRST_URL=http://127.0.0.1:8099/ npm start  # gegen eine lokale Testversion der Website
 npm test                                    # RCON, Scan und Absicherung gegen einen simulierten Server
 npm run dist:linux                          # AppImage in dist/

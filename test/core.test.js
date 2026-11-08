@@ -80,6 +80,10 @@ test('Scan: Namen per A2S, Mappool per RCON vom ersten Server', async () => {
 
 test('Absicherung: Domain, LAN-Adressen, Befehle', () => {
   assert.equal(isOwn('https://lan.brat.wurst.pw/index.php?p=rcon'), true);
+  assert.equal(isOwn('https://brat.wurst.pw/lan/index.php?p=rcon'), true);
+  assert.equal(isOwn('https://brat.wurst.pw/'), false);
+  assert.equal(isOwn('https://brat.wurst.pw/lanparty/'), false);
+  assert.equal(isOwn('https://brat.wurst.pw/lan'), false);
   assert.equal(isOwn('https://brat.wurst.pw/lan/index.php'), true);
   assert.equal(isOwn('https://brat.wurst.pw/anderes/'), false);
   assert.equal(isOwn('https://lan.brat.wurst.pw.evil.example/'), false);
