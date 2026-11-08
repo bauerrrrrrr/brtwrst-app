@@ -8,6 +8,7 @@ const { START_URL, isOwn, isLanAddr, validCmds } = require('./guard');
 const rcon = require('./rcon');
 const { scan } = require('./scan');
 const updater = require('./updater');
+const gsi = require('./gsi');
 
 // AppImage: Viele Distributionen (z. B. Ubuntu 24.04) erlauben die Chromium-Sandbox ohne Installation nicht.
 // Die Fenster laufen trotzdem isoliert (contextIsolation, kein nodeIntegration) und laden nur unsere Seite.
@@ -75,6 +76,13 @@ ipcMain.handle('brtwrst:scan', async (e, { list } = {}) => {
   if (!Array.isArray(list) || list.length > 256) return { names: {}, maps: [], error: 'Ungültige Serverliste' };
   const clean = list.filter(x => Array.isArray(x) && /^\d{1,4}$/.test(String(x[0])) && isLanAddr(x[1]));
   return scan(clean);
+});
+
+ipcMain.handle('brtwrst:gsi-install', async (e, { token } = {}) => {
+  if (!fromOwn(e)) return { ok: false, error: 'Nicht erlaubt' };
+  if (typeof token !== 'string' || !/^[A-Za-z0-9._~-]{8,200}$/.test(token)) return { ok: false, error: 'Ungültiger Schlüssel' };
+  const u = new URL('gsi.php', e.senderFrame.url); u.search = ''; u.hash = '';
+  return gsi.install(u.href, token);
 });
 
 // ---------- Updates (signiert, über GitHub Releases) ----------

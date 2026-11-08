@@ -12,5 +12,7 @@ if (own) {
     rcon: (addr, pass, cmds) => ipcRenderer.invoke('brtwrst:rcon', { addr, pass, cmds }),
     /** Server im LAN abfragen + Mappool → { names: {id: name}, maps: [] } */
     scan: list => ipcRenderer.invoke('brtwrst:scan', { list }),
+    /** GSI-Datei in alle gefundenen CS2-cfg-Ordner legen → { ok, paths } */
+    installGsi: token => ipcRenderer.invoke('brtwrst:gsi-install', { token }),
   });
 }
