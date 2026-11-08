@@ -11,7 +11,7 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test \"test/*.test.js\"",
-    "dist:linux": "electron-builder --linux AppImage deb",
+    "dist:linux": "electron-builder --linux AppImage",
     "dist:win": "electron-builder --win nsis"
   },
   "build": {
@@ -29,8 +29,7 @@
     },
     "linux": {
       "target": [
-        "AppImage",
-        "deb"
+        "AppImage"
       ],
       "category": "Game",
       "icon": "build/icon.png",

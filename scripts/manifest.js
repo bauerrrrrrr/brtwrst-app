@@ -20,7 +20,6 @@ const info = name => {
 const files = {
   win: info(pick(new RegExp(`^BRTWRST-${version}-win-.*\\.exe$`))),
   appimage: info(pick(new RegExp(`^BRTWRST-${version}-linux-.*\\.AppImage$`))),
-  deb: info(pick(new RegExp(`^BRTWRST-${version}-linux-.*\\.deb$`))),
 };
 for (const k of Object.keys(files)) if (!files[k]) delete files[k];
 if (!files.win && !files.appimage) { console.error('Keine Installer im Ordner gefunden'); process.exit(1); }

@@ -36,7 +36,7 @@ npm install
 npm start                                   # lädt https://lan.brat.wurst.pw/
 BRTWRST_URL=http://127.0.0.1:8099/ npm start  # gegen eine lokale Testversion der Website
 npm test                                    # RCON, Scan und Absicherung gegen einen simulierten Server
-npm run dist:linux                          # AppImage + .deb in dist/
+npm run dist:linux                          # AppImage in dist/
 npm run dist:win                            # Windows-Installer in dist/
 ```
 
@@ -60,7 +60,7 @@ git commit -am "Version 0.1.1" && git tag v0.1.1 && git push && git push origin 
 
 GitHub Actions (`.github/workflows/release.yml`) baut dann:
 - **Tests:** Sie laufen zuerst.
-- **Linux:** AppImage und `.deb`.
+- **Linux:** AppImage (bewusst nur dieses Paket, weil es sich selbst aktualisiert).
 - **Windows:** einen Installer (NSIS).
 - **Manifest:** `manifest.json` mit Größe und SHA-256 jeder Datei, signiert mit Ed25519 (`manifest.json.sig`), danach das GitHub-Release.
 
@@ -73,6 +73,6 @@ GitHub Actions (`.github/workflows/release.yml`) baut dann:
 Danach je nach System:
 - **Windows:** Der Installer läuft still (`/S`) und startet die App neu.
 - **Linux (AppImage):** Die neue Datei ersetzt die alte, die alte bleibt als `.AppImage.bak` liegen.
-- **Linux (.deb):** Die App zeigt nur einen Hinweis mit Download-Link.
+- **Linux, nicht als AppImage gestartet** (z. B. `npm start`): Die App zeigt nur einen Hinweis mit Download-Link.
 
 **Signaturschlüssel:** Der private Schlüssel liegt nur als Repository-Secret `BRTWRST_SIGNING_KEY` vor, im Format PEM (PKCS#8). Geht er verloren, braucht es ein neues Schlüsselpaar und eine App-Version mit dem neuen öffentlichen Schlüssel. Diese müssen alle einmal von Hand installieren.

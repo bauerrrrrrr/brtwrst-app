@@ -30,7 +30,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            cmd: npx electron-builder --linux AppImage deb --publish never
+            cmd: npx electron-builder --linux AppImage --publish never
           - os: windows-latest
             cmd: npx electron-builder --win nsis --publish never
     runs-on: ${{ matrix.os }}
@@ -48,7 +48,6 @@ jobs:
           name: dist-${{ matrix.os }}
           path: |
             dist/*.AppImage
-            dist/*.deb
             dist/*.exe
           if-no-files-found: error
 
@@ -76,7 +75,7 @@ jobs:
           cat > notes.md <<EOF
           **Windows:** \`BRTWRST-$V-win-x64.exe\` herunterladen und starten. Beim ersten Start warnt Windows ("Der Computer wurde durch Windows geschützt"): "Weitere Informationen" → "Trotzdem ausführen".
 
-          **Linux:** \`BRTWRST-$V-linux-x86_64.AppImage\` herunterladen, ausführbar machen (\`chmod +x\`) und starten. Aktualisiert sich selbst. Alternativ das \`.deb\` (ohne automatische Updates).
+          **Linux:** \`BRTWRST-$V-linux-x86_64.AppImage\` herunterladen, ausführbar machen (\`chmod +x\`) und starten. Aktualisiert sich selbst, wenn die Datei in einem Ordner liegt, in den du schreiben darfst (z. B. \`~/Applications\`). Fehlt \`libfuse2\`: \`sudo apt install libfuse2t64\`.
 
           Updates werden signiert (manifest.json + manifest.json.sig, Ed25519) und von der App vor der Installation geprüft.
           EOF
