@@ -1,4 +1,5 @@
 # Release bauen und veröffentlichen: git tag v0.1.1 && git push origin v0.1.1
+# oder auf GitHub: Releases → "Draft a new release" → Tag v0.1.1 neu anlegen → "Publish release".
 # (Version in package.json muss zum Tag passen.)
 name: Release
 
@@ -72,11 +73,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           V=${GITHUB_REF_NAME#v}
-          gh release create "$GITHUB_REF_NAME" rel/* --title "BRTWRST $V" --notes-file <(cat <<EOF
+          cat > notes.md <<EOF
           **Windows:** \`BRTWRST-$V-win-x64.exe\` herunterladen und starten. Beim ersten Start warnt Windows ("Der Computer wurde durch Windows geschützt"): "Weitere Informationen" → "Trotzdem ausführen".
 
           **Linux:** \`BRTWRST-$V-linux-x86_64.AppImage\` herunterladen, ausführbar machen (\`chmod +x\`) und starten. Aktualisiert sich selbst. Alternativ das \`.deb\` (ohne automatische Updates).
 
           Updates werden signiert (manifest.json + manifest.json.sig, Ed25519) und von der App vor der Installation geprüft.
           EOF
-          )
+          # Release schon von Hand angelegt (Tag über die GitHub-Seite)? Dann nur Dateien und Text ergänzen.
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" rel/* --clobber
+            gh release edit "$GITHUB_REF_NAME" --title "BRTWRST $V" --notes-file notes.md --draft=false
+          else
+            gh release create "$GITHUB_REF_NAME" rel/* --title "BRTWRST $V" --notes-file notes.md
+          fi
