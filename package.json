@@ -1,0 +1,55 @@
+{
+  "name": "brtwrst",
+  "productName": "BRTWRST",
+  "version": "0.1.0",
+  "description": "Team-Bratwurst-Intranet als App, mit direktem RCON und LAN-Scan für die CS2-Server",
+  "homepage": "https://github.com/bauerrrrrrr/brtwrst-app",
+  "author": "Team Bratwurst",
+  "license": "MIT",
+  "private": true,
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test \"test/*.test.js\"",
+    "dist:linux": "electron-builder --linux AppImage deb",
+    "dist:win": "electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "pw.wurst.brat.brtwrst",
+    "productName": "BRTWRST",
+    "artifactName": "BRTWRST-${version}-${os}-${arch}.${ext}",
+    "files": [
+      "src/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Game",
+      "icon": "build/icon.png",
+      "maintainer": "Team Bratwurst"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "shortcutName": "BRTWRST"
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.9.3",
+    "electron-builder": "^26.18.0"
+  }
+}
