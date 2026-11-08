@@ -6,6 +6,7 @@ set -euo pipefail
 V=$1 OUT=$2 GPG_ID=${3:-} BASE=${4:-}
 APP=pw.wurst.brat.Brtwrst
 cd "$(dirname "$0")/.."
+mkdir -p "$OUT"
 
 sed -e "s/@VERSION@/$V/" -e "s/@DATE@/$(date -u +%F)/" flatpak/$APP.metainfo.xml > flatpak/.metainfo.tmp
 mv flatpak/.metainfo.tmp flatpak/$APP.metainfo.xml
