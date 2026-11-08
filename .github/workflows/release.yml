@@ -57,7 +57,7 @@ jobs:
           - os: windows-latest
             cmd: npx electron-builder --win nsis --publish never
           - os: macos-latest
-            cmd: npx electron-builder --mac dmg zip --arm64 --x64 --publish never
+            cmd: npx electron-builder --mac dmg zip --arm64 --publish never
     runs-on: ${{ matrix.os }}
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'   # keine Code-Signatur (Windows warnt beim ersten Start)
@@ -155,7 +155,7 @@ jobs:
 
           **Linux:** \`BRTWRST-$V-linux-x86_64.AppImage\` herunterladen, ausführbar machen (\`chmod +x\`) und starten. Aktualisiert sich selbst, wenn die Datei in einem Ordner liegt, in den du schreiben darfst (z. B. \`~/Applications\`). Fehlt \`libfuse2\`: \`sudo apt install libfuse2t64\`.
 
-          **macOS (Apple Silicon: \`mac-arm64\`, Intel: \`mac-x64\`):** \`.dmg\` öffnen und BRTWRST in „Programme“ ziehen. Die App ist nicht von Apple signiert: Beim ersten Start meldet macOS, dass sie nicht geöffnet werden kann. Dann Systemeinstellungen → Datenschutz & Sicherheit → „Trotzdem öffnen“. Danach aktualisiert sie sich selbst.
+          **macOS (nur Apple Silicon, M1 und neuer):** \`BRTWRST-$V-mac-arm64.dmg\` öffnen und BRTWRST in „Programme“ ziehen. Die App ist nicht von Apple signiert: Beim ersten Start meldet macOS, dass sie nicht geöffnet werden kann. Dann Systemeinstellungen → Datenschutz & Sicherheit → „Trotzdem öffnen“. Danach aktualisiert sie sich selbst.
 
           **Linux (Flatpak, Updates über Discover / Software):** Anleitung und Ein-Klick-Installation unter https://bauerrrrrrr.github.io/brtwrst-app/
 

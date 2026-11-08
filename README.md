@@ -69,7 +69,7 @@ GitHub Actions (`.github/workflows/release.yml`) baut dann:
 - **Linux:** ein AppImage (aktualisiert sich selbst) und ein Flatpak.
 - **Flatpak-Repo:** GPG-signiert (Secret `BRTWRST_FLATPAK_GPG_KEY`, öffentlicher Schlüssel `flatpak/brtwrst-flatpak.asc`), veröffentlicht auf GitHub Pages: <https://bauerrrrrrr.github.io/brtwrst-app/>. Das Repo ist schon aktualisiert, bevor das Release erscheint.
 - **Windows:** einen Installer (NSIS).
-- **macOS:** `.dmg` zum Installieren und `.zip` für Updates, je für Apple Silicon (`arm64`) und Intel (`x64`). Nur ad-hoc signiert, nicht notarisiert: Der erste Start muss in den Systemeinstellungen unter Datenschutz & Sicherheit mit „Trotzdem öffnen“ erlaubt werden.
+- **macOS:** `.dmg` zum Installieren und `.zip` für Updates, nur für Apple Silicon (`arm64`, M1 und neuer), Intel-Macs bewusst nicht. Nur ad-hoc signiert, nicht notarisiert: Der erste Start muss in den Systemeinstellungen unter Datenschutz & Sicherheit mit „Trotzdem öffnen“ erlaubt werden.
 - **Manifest:** `manifest.json` mit Größe und SHA-256 jeder Datei, signiert mit Ed25519 (`manifest.json.sig`), danach das GitHub-Release.
 
 **Wie die App aktualisiert:** 10 Sekunden nach dem Start und danach alle 4 Stunden, außerdem über das Menü „Nach Updates suchen“, holt sie sich `releases/latest/download/manifest.json`.

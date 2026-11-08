@@ -1,7 +1,7 @@
 {
   "name": "brtwrst",
   "productName": "BRTWRST",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Team-Bratwurst-Intranet als App, mit direktem RCON und LAN-Scan für die CS2-Server",
   "homepage": "https://github.com/bauerrrrrrr/brtwrst-app",
   "author": "Team Bratwurst",
@@ -13,7 +13,7 @@
     "test": "node --test \"test/*.test.js\"",
     "dist:linux": "electron-builder --linux AppImage",
     "dist:win": "electron-builder --win nsis",
-    "dist:mac": "electron-builder --mac dmg zip --arm64 --x64"
+    "dist:mac": "electron-builder --mac dmg zip --arm64"
   },
   "build": {
     "appId": "pw.wurst.brat.brtwrst",
@@ -53,15 +53,13 @@
         {
           "target": "dmg",
           "arch": [
-            "arm64",
-            "x64"
+            "arm64"
           ]
         },
         {
           "target": "zip",
           "arch": [
-            "arm64",
-            "x64"
+            "arm64"
           ]
         }
       ],
