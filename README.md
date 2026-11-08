@@ -1,6 +1,6 @@
 # BRTWRST
 
-Das Team-Bratwurst-Intranet als App für **Windows und Linux**, mit direktem **RCON** und **LAN-Scan** für die CS2-Server auf der MTA-LAN.
+Das Team-Bratwurst-Intranet als App für **Windows, Linux und macOS**, mit direktem **RCON** und **LAN-Scan** für die CS2-Server auf der MTA-LAN.
 
 Die App ist ein Rahmen um die Website <https://lan.brat.wurst.pw/>. Inhalte, Login und Daten kommen live von dort. Zusätzlich kann die App, was ein Browser nicht darf:
 
@@ -69,6 +69,7 @@ GitHub Actions (`.github/workflows/release.yml`) baut dann:
 - **Linux:** ein AppImage (aktualisiert sich selbst) und ein Flatpak.
 - **Flatpak-Repo:** GPG-signiert (Secret `BRTWRST_FLATPAK_GPG_KEY`, öffentlicher Schlüssel `flatpak/brtwrst-flatpak.asc`), veröffentlicht auf GitHub Pages: <https://bauerrrrrrr.github.io/brtwrst-app/>. Das Repo ist schon aktualisiert, bevor das Release erscheint.
 - **Windows:** einen Installer (NSIS).
+- **macOS:** `.dmg` zum Installieren und `.zip` für Updates, je für Apple Silicon (`arm64`) und Intel (`x64`). Nur ad-hoc signiert, nicht notarisiert: Der erste Start muss in den Systemeinstellungen unter Datenschutz & Sicherheit mit „Trotzdem öffnen“ erlaubt werden.
 - **Manifest:** `manifest.json` mit Größe und SHA-256 jeder Datei, signiert mit Ed25519 (`manifest.json.sig`), danach das GitHub-Release.
 
 **Wie die App aktualisiert:** 10 Sekunden nach dem Start und danach alle 4 Stunden, außerdem über das Menü „Nach Updates suchen“, holt sie sich `releases/latest/download/manifest.json`.
@@ -79,6 +80,7 @@ GitHub Actions (`.github/workflows/release.yml`) baut dann:
 
 Danach je nach System:
 - **Windows:** Der Installer läuft still (`/S`) und startet die App neu.
+- **macOS:** Die App entpackt das `.zip` mit `ditto`, tauscht die laufende `.app` aus (die alte bleibt als `alt.app` im Update-Ordner) und startet neu. Liegt die App an einem Ort ohne Schreibrechte, kommt ein Hinweis.
 - **Linux (AppImage):** Die neue Datei ersetzt die alte, die alte bleibt als `.AppImage.bak` liegen.
 - **Linux (Flatpak):** Die App lädt selbst nichts. Sie fragt „Jetzt aktualisieren?“ und lässt Flatpak die neue Version über das Flatpak-Portal aus unserem Repo installieren; danach Neustart. Klappt das nicht (z. B. weil die neue Version mehr Rechte braucht), kommt der Hinweis auf Discover / `flatpak update`. Unabhängig davon aktualisieren Discover und GNOME Software das Flatpak wie jedes andere.
 - **Linux, weder AppImage noch Flatpak** (z. B. `npm start`): Die App zeigt nur einen Hinweis mit Download-Link.

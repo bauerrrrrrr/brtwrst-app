@@ -51,6 +51,7 @@ function cfgDirs(roots = steamRoots()) {
 
 /** → { ok, paths } bzw. { ok: false, error } */
 function install(uri, token, roots) {
+  if (process.platform === 'darwin' && !roots) return { ok: false, error: 'CS2 gibt es nicht für macOS. Die GSI-Datei gehört auf den Spiel-PC (Windows oder Linux).' };
   const dirs = cfgDirs(roots);
   if (!dirs.length) return { ok: false, error: 'CS2 nicht gefunden. Bitte die Datei herunterladen und von Hand in den cfg-Ordner legen.' };
   const paths = [];

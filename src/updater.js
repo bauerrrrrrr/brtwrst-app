@@ -48,6 +48,7 @@ function get(url, { maxBytes = 512 * 1024 * 1024, file = null, redirects = 5 } =
 /** Welche Datei aus dem Manifest passt zu dieser Installation? */
 function target() {
   if (process.platform === 'win32') return { key: 'win', mode: 'nsis' };
+  if (process.platform === 'darwin') return { key: `mac-${process.arch}`, mode: 'mac' };   // ZIP mit der .app, wird ausgetauscht
   if (process.platform === 'linux' && process.env.FLATPAK_ID) return { key: null, mode: 'flatpak' };   // Updates über das Flatpak-Repo
   if (process.platform === 'linux' && process.env.APPIMAGE) return { key: 'appimage', mode: 'appimage' };
   return { key: null, mode: 'manual' };
@@ -86,4 +87,34 @@ function swapAppImage(downloaded, current = process.env.APPIMAGE) {
   return current;
 }
 
-module.exports = { BASE, newer, verifyManifest, check, download, swapAppImage, target };
+/** Pfad der laufenden .app (…/BRTWRST.app/Contents/MacOS/BRTWRST → …/BRTWRST.app) oder null */
+function macAppPath(exe = process.execPath) {
+  const app = path.resolve(exe, '..', '..', '..');
+  return app.endsWith('.app') ? app : null;
+}
+
+/**
+ * macOS: ZIP mit ditto entpacken (erhält Signatur und Rechte), die laufende .app gegen die neue tauschen.
+ * Die alte wandert nach <arbeitsordner>/alt.app und wird beim nächsten Update entfernt. → Pfad der neuen .app
+ */
+function swapMacApp(zip, current = macAppPath(), work = path.dirname(zip), unzip = (z, d) => require('child_process').execFileSync('ditto', ['-x', '-k', z, d])) {
+  if (!current) throw new Error('Die App läuft nicht aus einem .app-Paket');
+  const out = path.join(work, 'neu');
+  fs.rmSync(out, { recursive: true, force: true });
+  fs.mkdirSync(out, { recursive: true });
+  unzip(zip, out);
+  const name = fs.readdirSync(out).find(n => n.endsWith('.app'));
+  if (!name) throw new Error('Im Update steckt keine .app');
+  const old = path.join(work, 'alt.app');
+  fs.rmSync(old, { recursive: true, force: true });
+  try { fs.accessSync(path.dirname(current), fs.constants.W_OK); }
+  catch { throw new Error(`Keine Schreibrechte für ${path.dirname(current)}. Bitte die App in den Ordner „Programme“ legen oder das Update von Hand installieren.`); }
+  fs.renameSync(current, old);
+  try { fs.renameSync(path.join(out, name), current); }
+  catch (e) { fs.renameSync(old, current); throw e; }   // zurückrollen
+  fs.rmSync(out, { recursive: true, force: true });
+  fs.rmSync(zip, { force: true });
+  return current;
+}
+
+module.exports = { BASE, newer, verifyManifest, check, download, swapAppImage, swapMacApp, macAppPath, target };

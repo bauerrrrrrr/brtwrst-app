@@ -56,6 +56,8 @@ jobs:
             cmd: npx electron-builder --linux AppImage dir --publish never && tar -czf dist/linux-unpacked.tar.gz -C dist linux-unpacked
           - os: windows-latest
             cmd: npx electron-builder --win nsis --publish never
+          - os: macos-latest
+            cmd: npx electron-builder --mac dmg zip --arm64 --x64 --publish never
     runs-on: ${{ matrix.os }}
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'   # keine Code-Signatur (Windows warnt beim ersten Start)
@@ -72,6 +74,8 @@ jobs:
           path: |
             dist/*.AppImage
             dist/*.exe
+            dist/*.dmg
+            dist/*.zip
           if-no-files-found: error
       - uses: actions/upload-artifact@v4   # Grundlage fürs Flatpak, kommt nicht ins Release
         if: runner.os == 'Linux'
@@ -150,6 +154,8 @@ jobs:
           **Windows:** \`BRTWRST-$V-win-x64.exe\` herunterladen und starten. Beim ersten Start warnt Windows ("Der Computer wurde durch Windows geschützt"): "Weitere Informationen" → "Trotzdem ausführen".
 
           **Linux:** \`BRTWRST-$V-linux-x86_64.AppImage\` herunterladen, ausführbar machen (\`chmod +x\`) und starten. Aktualisiert sich selbst, wenn die Datei in einem Ordner liegt, in den du schreiben darfst (z. B. \`~/Applications\`). Fehlt \`libfuse2\`: \`sudo apt install libfuse2t64\`.
+
+          **macOS (Apple Silicon: \`mac-arm64\`, Intel: \`mac-x64\`):** \`.dmg\` öffnen und BRTWRST in „Programme“ ziehen. Die App ist nicht von Apple signiert: Beim ersten Start meldet macOS, dass sie nicht geöffnet werden kann. Dann Systemeinstellungen → Datenschutz & Sicherheit → „Trotzdem öffnen“. Danach aktualisiert sie sich selbst.
 
           **Linux (Flatpak, Updates über Discover / Software):** Anleitung und Ein-Klick-Installation unter https://bauerrrrrrr.github.io/brtwrst-app/
 

@@ -108,6 +108,10 @@ async function checkUpdates(manual = false) {
     if (u.mode === 'nsis') {
       spawn(file, ['--updated', '/S', '--force-run'], { detached: true, stdio: 'ignore' }).unref();
       app.quit();
+    } else if (u.mode === 'mac') {
+      const appPath = updater.swapMacApp(file);
+      spawn('/bin/sh', ['-c', 'sleep 1; open -n "$0"', appPath], { detached: true, stdio: 'ignore' }).unref();   // neue App starten, wenn die alte weg ist
+      app.exit(0);
     } else if (u.mode === 'appimage') {
       const exe = updater.swapAppImage(file);
       spawn(exe, process.argv.slice(1), { detached: true, stdio: 'ignore' }).unref();   // gleiche Startparameter wie bisher
@@ -143,18 +147,21 @@ async function flatpakUpdate(u, ask) {
 // ---------- Menü (Alt blendet es ein) ----------
 function menu() {
   const go = d => () => { const n = win.webContents.navigationHistory; if (d < 0 ? n.canGoBack() : n.canGoForward()) d < 0 ? n.goBack() : n.goForward(); };
+  const mac = process.platform === 'darwin';
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     { label: 'BRTWRST', submenu: [
-      { label: 'Startseite', accelerator: 'Alt+Home', click: () => win.loadURL(START_URL) },
+      { label: 'Startseite', accelerator: mac ? 'Cmd+Shift+H' : 'Alt+Home', click: () => win.loadURL(START_URL) },
       { label: 'Im Browser öffnen', click: () => openExternal(win.webContents.getURL().startsWith('http') ? win.webContents.getURL() : START_URL) },
       { type: 'separator' },
       { label: 'Nach Updates suchen', click: () => checkUpdates(true) },
       { label: `Version ${app.getVersion()}`, enabled: false },
+      ...(mac ? [{ type: 'separator' }, { role: 'hide', label: 'BRTWRST ausblenden' }, { role: 'hideOthers', label: 'Andere ausblenden' }] : []),
       { role: 'quit', label: 'Beenden' },
     ] },
+    { role: 'editMenu', label: 'Bearbeiten' },   // macOS: ohne dieses Menü gehen Cmd+C/Cmd+V nicht
     { label: 'Ansicht', submenu: [
-      { label: 'Zurück', accelerator: 'Alt+Left', click: go(-1) },
-      { label: 'Vorwärts', accelerator: 'Alt+Right', click: go(1) },
+      { label: 'Zurück', accelerator: mac ? 'Cmd+[' : 'Alt+Left', click: go(-1) },
+      { label: 'Vorwärts', accelerator: mac ? 'Cmd+]' : 'Alt+Right', click: go(1) },
       { role: 'reload', label: 'Neu laden' },
       { role: 'forceReload', label: 'Neu laden (ohne Cache)' },
       { type: 'separator' },
