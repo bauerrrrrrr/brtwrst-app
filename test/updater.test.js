@@ -54,8 +54,14 @@ test('Signiertes Manifest: neue Version gefunden, Datei geprüft geladen', async
     assert.equal(r.version, '0.1.1'); assert.equal(r.notes, 'Testnotiz');
     if (process.platform === 'linux') { assert.equal(r.mode, 'appimage'); assert.equal(r.file.name, 'BRTWRST-0.1.1-linux-x86_64.AppImage'); }
     assert.equal(await u.check('0.1.1'), null, 'gleiche Version ist kein Update');
-    const got = await u.download(r.file || { name: 'BRTWRST-0.1.1-linux-x86_64.AppImage', size: 3, sha256: crypto.createHash('sha256').update('NEU').digest('hex') }, path.join(dir, 'dl'));
+    const f = r.file || { name: 'BRTWRST-0.1.1-linux-x86_64.AppImage', size: 3, sha256: crypto.createHash('sha256').update('NEU').digest('hex') };
+    const prog = [];
+    const got = await u.download(f, path.join(dir, 'dl'), p => prog.push(p));
     assert.equal(fs.readFileSync(got, 'utf8'), 'NEU');
+    assert.equal(prog.at(-1), 1, 'Fortschritt endet bei 100 %');
+    fs.rmSync(path.join(dir, f.name));   // Quelle weg: zweiter Aufruf muss die schon geladene Datei nehmen
+    const again = []; assert.equal(await u.download(f, path.join(dir, 'dl'), p => again.push(p)), got);
+    assert.deepEqual(again, [1]);
   } finally { delete process.env.APPIMAGE; s.close(); }
 });
 

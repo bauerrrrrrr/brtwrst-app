@@ -88,9 +88,14 @@ ipcMain.handle('brtwrst:gsi-install', async (e, { token } = {}) => {
 
 // ---------- Updates (signiert, über GitHub Releases) ----------
 const RELEASES = 'https://github.com/bauerrrrrrr/brtwrst-app/releases/latest';
-let updating = false, skipped = null;
+let updating = false, skipped = null, upState = '';
+const upLog = msg => { try { fs.appendFileSync(path.join(app.getPath('userData'), 'update.log'), `${new Date().toISOString()} ${msg}\n`); } catch {} };
 async function checkUpdates(manual = false) {
-  if (updating) return; updating = true;
+  if (updating) {   // läuft schon (z. B. Download im Hintergrund): Stand zeigen statt still nichts zu tun
+    if (manual) await dialog.showMessageBox(win, { type: 'info', message: 'Update läuft bereits', detail: upState || 'Suche nach Updates …', buttons: ['OK'] });
+    return;
+  }
+  updating = true; upState = 'Suche nach Updates …';
   const ask = async (opts) => process.env.BRTWRST_UPDATE_YES ? 0 : (await dialog.showMessageBox(win, { type: 'info', noLink: true, ...opts })).response;
   try {
     const u = await updater.check(app.getVersion());
@@ -102,7 +107,18 @@ async function checkUpdates(manual = false) {
       else skipped = u.version;
       return;
     }
-    const file = await updater.download(u.file, path.join(app.getPath('userData'), 'updates'));
+    upLog(`Version ${u.version} gefunden, lade ${u.file.name}`);
+    upState = `Version ${u.version} wird geladen …`;
+    if (manual && !process.env.BRTWRST_UPDATE_YES) dialog.showMessageBox(win, { type: 'info', message: `Version ${u.version} gefunden`, detail: `Sie wird im Hintergrund geladen (${Math.round(u.file.size / 1e6)} MB, Fortschritt im ${process.platform === 'darwin' ? 'Dock' : 'Taskleisten'}-Symbol). Danach kommt die Frage zum Neustart.`, buttons: ['OK'] });
+    let shown = -1;
+    const file = await updater.download(u.file, path.join(app.getPath('userData'), 'updates'), f => {
+      const pct = Math.floor(f * 100);
+      if (pct === shown) return; shown = pct;
+      upState = `Version ${u.version} wird geladen: ${pct} %`;
+      win?.setProgressBar(Math.max(0.01, f));   // Fortschritt im Dock bzw. in der Taskleiste
+    });
+    win?.setProgressBar(-1);
+    upLog(`${u.file.name} geladen und geprüft`);
     if (await ask({ message: `Version ${u.version} ist bereit`, detail: (u.notes ? u.notes + '\n\n' : '') + 'Jetzt neu starten und aktualisieren?', buttons: ['Jetzt neu starten', 'Später'] }) !== 0) { skipped = u.version; return; }
     saveBounds();
     if (u.mode === 'nsis') {
@@ -118,9 +134,11 @@ async function checkUpdates(manual = false) {
       app.exit(0);
     }
   } catch (e) {
+    win?.setProgressBar(-1);
+    upLog('Fehler: ' + e.message);
     if (manual) await dialog.showMessageBox(win, { type: 'warning', message: 'Update nicht möglich', detail: e.message, buttons: ['OK'] });
     else console.error('Update-Prüfung:', e.message);
-  } finally { updating = false; }
+  } finally { updating = false; upState = ''; }
 }
 
 /** Flatpak: Update aus unserem Flatpak-Repo über das Portal holen, sonst Hinweis auf Discover / flatpak update. */
