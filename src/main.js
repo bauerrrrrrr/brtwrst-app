@@ -9,6 +9,7 @@ const rcon = require('./rcon');
 const { scan } = require('./scan');
 const updater = require('./updater');
 const gsi = require('./gsi');
+const flatpak = require('./flatpak');
 
 // AppImage: Viele Distributionen (z. B. Ubuntu 24.04) erlauben die Chromium-Sandbox ohne Installation nicht.
 // Die Fenster laufen trotzdem isoliert (contextIsolation, kein nodeIntegration) und laden nur unsere Seite.
@@ -95,6 +96,7 @@ async function checkUpdates(manual = false) {
     const u = await updater.check(app.getVersion());
     if (!u) { if (manual) await ask({ message: 'BRTWRST ist aktuell.', detail: `Version ${app.getVersion()}`, buttons: ['OK'] }); return; }
     if (!manual && skipped === u.version) return;
+    if (u.mode === 'flatpak') return await flatpakUpdate(u, ask);
     if (u.mode === 'manual' || !u.file) {
       if (await ask({ message: `Neue Version ${u.version} verfügbar`, detail: 'Diese Installation aktualisiert sich nicht selbst. Lade die neue Version herunter.', buttons: ['Download öffnen', 'Später'] }) === 0) openExternal(RELEASES);
       else skipped = u.version;
@@ -115,6 +117,27 @@ async function checkUpdates(manual = false) {
     if (manual) await dialog.showMessageBox(win, { type: 'warning', message: 'Update nicht möglich', detail: e.message, buttons: ['OK'] });
     else console.error('Update-Prüfung:', e.message);
   } finally { updating = false; }
+}
+
+/** Flatpak: Update aus unserem Flatpak-Repo über das Portal holen, sonst Hinweis auf Discover / flatpak update. */
+async function flatpakUpdate(u, ask) {
+  if (await ask({ message: `Neue Version ${u.version} verfügbar`, detail: `Installiert ist ${app.getVersion()}. Das Update kommt aus dem BRTWRST-Flatpak-Repo.`, buttons: ['Jetzt aktualisieren', 'Später'] }) !== 0) { skipped = u.version; return; }
+  let result;
+  try {
+    win?.setProgressBar(0.01);
+    result = await flatpak.update(p => win?.setProgressBar(Math.max(0.01, p / 100)));
+  } catch (e) {
+    await dialog.showMessageBox(win, { type: 'warning', message: 'Update nicht möglich', detail: `${e.message}\n\n${flatpak.manualHint}`, buttons: ['OK'] });
+    return;
+  } finally { win?.setProgressBar(-1); }
+  if (result === 'empty') {
+    await ask({ message: 'Noch nicht im Flatpak-Repo', detail: `Version ${u.version} ist veröffentlicht, aber das Flatpak-Repo hat sie noch nicht. Bitte in ein paar Minuten noch einmal versuchen.\n\n${flatpak.manualHint}`, buttons: ['OK'] });
+    return;
+  }
+  if (await ask({ message: `Version ${u.version} ist installiert`, detail: 'Jetzt neu starten?', buttons: ['Jetzt neu starten', 'Später'] }) !== 0) return;
+  saveBounds();
+  flatpak.relaunch(process.argv.slice(1));
+  app.exit(0);
 }
 
 // ---------- Menü (Alt blendet es ein) ----------

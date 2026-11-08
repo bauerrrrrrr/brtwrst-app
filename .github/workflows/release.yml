@@ -30,7 +30,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            cmd: npx electron-builder --linux AppImage --publish never
+            cmd: npx electron-builder --linux AppImage dir --publish never && tar -czf dist/linux-unpacked.tar.gz -C dist linux-unpacked
           - os: windows-latest
             cmd: npx electron-builder --win nsis --publish never
     runs-on: ${{ matrix.os }}
@@ -50,16 +50,63 @@ jobs:
             dist/*.AppImage
             dist/*.exe
           if-no-files-found: error
+      - uses: actions/upload-artifact@v4   # Grundlage fürs Flatpak, kommt nicht ins Release
+        if: runner.os == 'Linux'
+        with:
+          name: linux-unpacked
+          path: dist/linux-unpacked.tar.gz
+          if-no-files-found: error
+
+  # Flatpak bauen, signieren und als Repo auf GitHub Pages veröffentlichen – vor dem Release,
+  # damit das Repo die neue Version schon hat, wenn die Apps das Manifest sehen.
+  flatpak:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: linux-unpacked, path: dist }
+      - name: Flatpak-Werkzeuge
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq flatpak flatpak-builder
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true   # bubblewrap auf Ubuntu 24.04
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+      - name: GPG-Schlüssel laden
+        env:
+          KEY: ${{ secrets.BRTWRST_FLATPAK_GPG_KEY }}
+        run: |
+          [ -n "$KEY" ] || { echo "::error::Secret BRTWRST_FLATPAK_GPG_KEY fehlt"; exit 1; }
+          export GNUPGHOME=$RUNNER_TEMP/gnupg; mkdir -m 700 -p "$GNUPGHOME"
+          echo "$KEY" | gpg --batch --quiet --import
+          ID=$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr/{print $10; exit}')
+          PUB=$(gpg --with-colons --import-options show-only --import < flatpak/brtwrst-flatpak.asc | awk -F: '/^fpr/{print $10; exit}')
+          [ "$ID" = "$PUB" ] || { echo "::error::Secret passt nicht zu flatpak/brtwrst-flatpak.asc ($ID ≠ $PUB)"; exit 1; }
+          echo "GNUPGHOME=$GNUPGHOME" >> "$GITHUB_ENV"; echo "GPG_ID=$ID" >> "$GITHUB_ENV"
+      - id: pages
+        uses: actions/configure-pages@v5
+      - name: Bauen und signieren
+        run: scripts/flatpak-build.sh "${GITHUB_REF_NAME#v}" site "$GPG_ID" "${{ steps.pages.outputs.base_url }}/"
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: site }
+      - id: deploy
+        uses: actions/deploy-pages@v4
 
   release:
-    needs: build
+    needs: [build, flatpak]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - uses: actions/download-artifact@v4
-        with: { path: rel, merge-multiple: true }
+        with: { path: rel, pattern: 'dist-*', merge-multiple: true }
       - name: Manifest erzeugen und signieren
         env:
           BRTWRST_SIGNING_KEY: ${{ secrets.BRTWRST_SIGNING_KEY }}
@@ -76,6 +123,8 @@ jobs:
           **Windows:** \`BRTWRST-$V-win-x64.exe\` herunterladen und starten. Beim ersten Start warnt Windows ("Der Computer wurde durch Windows geschützt"): "Weitere Informationen" → "Trotzdem ausführen".
 
           **Linux:** \`BRTWRST-$V-linux-x86_64.AppImage\` herunterladen, ausführbar machen (\`chmod +x\`) und starten. Aktualisiert sich selbst, wenn die Datei in einem Ordner liegt, in den du schreiben darfst (z. B. \`~/Applications\`). Fehlt \`libfuse2\`: \`sudo apt install libfuse2t64\`.
+
+          **Linux (Flatpak, Updates über Discover / Software):** Anleitung und Ein-Klick-Installation unter https://bauerrrrrrr.github.io/brtwrst-app/
 
           Updates werden signiert (manifest.json + manifest.json.sig, Ed25519) und von der App vor der Installation geprüft.
           EOF

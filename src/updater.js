@@ -48,6 +48,7 @@ function get(url, { maxBytes = 512 * 1024 * 1024, file = null, redirects = 5 } =
 /** Welche Datei aus dem Manifest passt zu dieser Installation? */
 function target() {
   if (process.platform === 'win32') return { key: 'win', mode: 'nsis' };
+  if (process.platform === 'linux' && process.env.FLATPAK_ID) return { key: null, mode: 'flatpak' };   // Updates über das Flatpak-Repo
   if (process.platform === 'linux' && process.env.APPIMAGE) return { key: 'appimage', mode: 'appimage' };
   return { key: null, mode: 'manual' };
 }

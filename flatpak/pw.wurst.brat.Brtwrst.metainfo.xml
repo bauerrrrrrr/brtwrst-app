@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>pw.wurst.brat.Brtwrst</id>
+  <name>BRTWRST</name>
+  <summary>Team-Bratwurst-Intranet mit RCON für die CS2-Server</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="pw.wurst.brat">
+    <name>Team Bratwurst</name>
+  </developer>
+  <description>
+    <p>Das Intranet von Team Bratwurst als App. Auf der RCON-Seite laufen Befehle direkt an die CS2-Server im LAN, mit Server-Scan, Config-Prüfung, Spielerliste mit Kick und Bann sowie der Einrichtung der GSI-Datei für den Beamer.</p>
+  </description>
+  <launchable type="desktop-id">pw.wurst.brat.Brtwrst.desktop</launchable>
+  <url type="homepage">https://github.com/bauerrrrrrr/brtwrst-app</url>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="@VERSION@" date="@DATE@"/>
+  </releases>
+</component>

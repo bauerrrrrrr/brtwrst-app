@@ -1,0 +1,33 @@
+# Probelauf fürs Flatpak bei Änderungen auf main: bauen (ohne Signatur), installieren, Inhalt prüfen.
+# Veröffentlicht nichts.
+name: Flatpak-Probe
+
+on:
+  push:
+    branches: [main]
+    paths: ['flatpak/**', 'scripts/flatpak-build.sh', 'package.json', '.github/workflows/flatpak-check.yml']
+
+jobs:
+  flatpak:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx electron-builder --linux dir --publish never && tar -czf dist/linux-unpacked.tar.gz -C dist linux-unpacked
+      - name: Flatpak-Werkzeuge
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq flatpak flatpak-builder desktop-file-utils appstream
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+      - name: Bauen
+        run: scripts/flatpak-build.sh "$(node -p "require('./package.json').version")" site
+      - name: Installieren und prüfen
+        run: |
+          desktop-file-validate flatpak/pw.wurst.brat.Brtwrst.desktop
+          flatpak remote-add --user --no-gpg-verify probe site/repo
+          flatpak install --user -y --noninteractive probe pw.wurst.brat.Brtwrst
+          flatpak info --user --show-permissions pw.wurst.brat.Brtwrst
+          flatpak run --command=sh pw.wurst.brat.Brtwrst -c 'test -x /app/brtwrst/brtwrst && test -x /app/bin/brtwrst && which zypak-wrapper flatpak-spawn && ls /app/share/icons/hicolor/512x512/apps/ && echo Inhalt ok'
+          du -sh site/repo

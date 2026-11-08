@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=BRTWRST
+Comment=Team-Bratwurst-Intranet mit RCON für die CS2-Server
+Exec=brtwrst %U
+Icon=pw.wurst.brat.Brtwrst
+Terminal=false
+Categories=Game;Network;

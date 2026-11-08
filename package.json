@@ -49,6 +49,7 @@
     }
   },
   "devDependencies": {
+    "dbus-next": "^0.10.2",
     "electron": "^44.9.3",
     "electron-builder": "^26.18.0"
   },

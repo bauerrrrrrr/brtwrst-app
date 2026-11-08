@@ -1,0 +1,42 @@
+# Flatpak-Paket für BRTWRST. Gebaut wird aus der fertigen Electron-App (dist/linux-unpacked.tar.gz),
+# die der Release-Workflow vorher erzeugt. Veröffentlicht als eigenes, GPG-signiertes Repo auf GitHub Pages.
+app-id: pw.wurst.brat.Brtwrst
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+base: org.electronjs.Electron2.BaseApp
+base-version: '25.08'
+command: brtwrst
+separate-locales: false
+finish-args:
+  - --share=ipc
+  - --share=network            # Intranet, RCON (TCP) und Server-Scan (UDP) im LAN
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # GSI-Datei in CS2 installieren: nur die Steam-Ordner im eigenen Home (natives Steam und Steam als Flatpak)
+  - --filesystem=~/.local/share/Steam
+  - --filesystem=~/.steam
+  - --filesystem=~/.var/app/com.valvesoftware.Steam/.local/share/Steam
+modules:
+  - name: brtwrst
+    buildsystem: simple
+    sources:
+      - type: archive
+        path: ../dist/linux-unpacked.tar.gz
+        dest: app
+      - type: file
+        path: brtwrst.sh
+      - type: file
+        path: pw.wurst.brat.Brtwrst.desktop
+      - type: file
+        path: pw.wurst.brat.Brtwrst.metainfo.xml
+      - type: file
+        path: ../build/icon.png
+    build-commands:
+      - cp -a app /app/brtwrst
+      - rm -f /app/brtwrst/chrome-sandbox          # Sandbox übernimmt zypak
+      - install -Dm755 brtwrst.sh /app/bin/brtwrst
+      - install -Dm644 pw.wurst.brat.Brtwrst.desktop /app/share/applications/pw.wurst.brat.Brtwrst.desktop
+      - install -Dm644 pw.wurst.brat.Brtwrst.metainfo.xml /app/share/metainfo/pw.wurst.brat.Brtwrst.metainfo.xml
+      - install -Dm644 icon.png /app/share/icons/hicolor/512x512/apps/pw.wurst.brat.Brtwrst.png

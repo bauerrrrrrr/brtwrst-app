@@ -49,6 +49,10 @@ npm run dist:win                            # Windows-Installer in dist/
 | `src/guard.js` | eigene Domain, LAN-Adressen, Befehlsprüfung |
 | `src/rcon.js` | Source-RCON-Client, eine Verbindung pro Auftrag, lange Antworten über mehrere Pakete |
 | `src/scan.js` | A2S-Scan und Mappool |
+| `src/gsi.js` | GSI-Datei in die CS2-cfg-Ordner legen |
+| `src/updater.js` | signierte Updates (Windows, AppImage) |
+| `src/flatpak.js`, `src/dbus.js` | Update im Flatpak über das Flatpak-Portal (eigener kleiner D-Bus-Client) |
+| `flatpak/` | Flatpak-Manifest, Starter, Metainfo, öffentlicher GPG-Schlüssel des Repos |
 | `test/` | Tests mit simuliertem CS2-Server |
 
 ## Releases und Updates
@@ -60,7 +64,8 @@ git commit -am "Version 0.1.1" && git tag v0.1.1 && git push && git push origin 
 
 GitHub Actions (`.github/workflows/release.yml`) baut dann:
 - **Tests:** Sie laufen zuerst.
-- **Linux:** AppImage (bewusst nur dieses Paket, weil es sich selbst aktualisiert).
+- **Linux:** ein AppImage (aktualisiert sich selbst) und ein Flatpak.
+- **Flatpak-Repo:** GPG-signiert (Secret `BRTWRST_FLATPAK_GPG_KEY`, öffentlicher Schlüssel `flatpak/brtwrst-flatpak.asc`), veröffentlicht auf GitHub Pages: <https://bauerrrrrrr.github.io/brtwrst-app/>. Das Repo ist schon aktualisiert, bevor das Release erscheint.
 - **Windows:** einen Installer (NSIS).
 - **Manifest:** `manifest.json` mit Größe und SHA-256 jeder Datei, signiert mit Ed25519 (`manifest.json.sig`), danach das GitHub-Release.
 
@@ -73,6 +78,18 @@ GitHub Actions (`.github/workflows/release.yml`) baut dann:
 Danach je nach System:
 - **Windows:** Der Installer läuft still (`/S`) und startet die App neu.
 - **Linux (AppImage):** Die neue Datei ersetzt die alte, die alte bleibt als `.AppImage.bak` liegen.
-- **Linux, nicht als AppImage gestartet** (z. B. `npm start`): Die App zeigt nur einen Hinweis mit Download-Link.
+- **Linux (Flatpak):** Die App lädt selbst nichts. Sie fragt „Jetzt aktualisieren?“ und lässt Flatpak die neue Version über das Flatpak-Portal aus unserem Repo installieren; danach Neustart. Klappt das nicht (z. B. weil die neue Version mehr Rechte braucht), kommt der Hinweis auf Discover / `flatpak update`. Unabhängig davon aktualisieren Discover und GNOME Software das Flatpak wie jedes andere.
+- **Linux, weder AppImage noch Flatpak** (z. B. `npm start`): Die App zeigt nur einen Hinweis mit Download-Link.
+
+**Flatpak einbinden:**
+
+```sh
+flatpak remote-add --user --if-not-exists brtwrst https://bauerrrrrrr.github.io/brtwrst-app/brtwrst.flatpakrepo
+flatpak install --user brtwrst pw.wurst.brat.Brtwrst
+```
+
+Rechte in der Sandbox: Netzwerk, Anzeige (Wayland/X11, GPU) und Schreibzugriff nur auf die Steam-Ordner im Home (`~/.local/share/Steam`, `~/.steam`, Steam als Flatpak) für die GSI-Datei. Liegt CS2 auf einer anderen Platte, die Datei von der GSI-Seite herunterladen.
+
+**Probelauf:** `.github/workflows/flatpak-check.yml` baut und installiert das Flatpak bei Änderungen an `flatpak/` auf main, ohne etwas zu veröffentlichen.
 
 **Signaturschlüssel:** Der private Schlüssel liegt nur als Repository-Secret `BRTWRST_SIGNING_KEY` vor, im Format PEM (PKCS#8). Geht er verloren, braucht es ein neues Schlüsselpaar und eine App-Version mit dem neuen öffentlichen Schlüssel. Diese müssen alle einmal von Hand installieren.
