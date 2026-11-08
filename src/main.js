@@ -1,11 +1,17 @@
 // BRTWRST – Rahmen um das Team-Bratwurst-Intranet mit direktem RCON und LAN-Scan.
 'use strict';
-const { app, BrowserWindow, ipcMain, shell, Menu, session } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Menu, session, dialog } = require('electron');
+const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const { START_URL, isOwn, isLanAddr, validCmds } = require('./guard');
 const rcon = require('./rcon');
 const { scan } = require('./scan');
+const updater = require('./updater');
+
+// AppImage: Viele Distributionen (z. B. Ubuntu 24.04) erlauben die Chromium-Sandbox ohne Installation nicht.
+// Die Fenster laufen trotzdem isoliert (contextIsolation, kein nodeIntegration) und laden nur unsere Seite.
+if (process.env.APPIMAGE) app.commandLine.appendSwitch('no-sandbox');
 
 app.setName('BRTWRST');
 if (!app.requestSingleInstanceLock()) { app.quit(); return; }
@@ -71,6 +77,38 @@ ipcMain.handle('brtwrst:scan', async (e, { list } = {}) => {
   return scan(clean);
 });
 
+// ---------- Updates (signiert, über GitHub Releases) ----------
+const RELEASES = 'https://github.com/bauerrrrrrr/brtwrst-app/releases/latest';
+let updating = false, skipped = null;
+async function checkUpdates(manual = false) {
+  if (updating) return; updating = true;
+  const ask = async (opts) => process.env.BRTWRST_UPDATE_YES ? 0 : (await dialog.showMessageBox(win, { type: 'info', noLink: true, ...opts })).response;
+  try {
+    const u = await updater.check(app.getVersion());
+    if (!u) { if (manual) await ask({ message: 'BRTWRST ist aktuell.', detail: `Version ${app.getVersion()}`, buttons: ['OK'] }); return; }
+    if (!manual && skipped === u.version) return;
+    if (u.mode === 'manual' || !u.file) {
+      if (await ask({ message: `Neue Version ${u.version} verfügbar`, detail: 'Diese Installation aktualisiert sich nicht selbst. Lade die neue Version herunter.', buttons: ['Download öffnen', 'Später'] }) === 0) openExternal(RELEASES);
+      else skipped = u.version;
+      return;
+    }
+    const file = await updater.download(u.file, path.join(app.getPath('userData'), 'updates'));
+    if (await ask({ message: `Version ${u.version} ist bereit`, detail: (u.notes ? u.notes + '\n\n' : '') + 'Jetzt neu starten und aktualisieren?', buttons: ['Jetzt neu starten', 'Später'] }) !== 0) { skipped = u.version; return; }
+    saveBounds();
+    if (u.mode === 'nsis') {
+      spawn(file, ['--updated', '/S', '--force-run'], { detached: true, stdio: 'ignore' }).unref();
+      app.quit();
+    } else if (u.mode === 'appimage') {
+      const exe = updater.swapAppImage(file);
+      spawn(exe, process.argv.slice(1), { detached: true, stdio: 'ignore' }).unref();   // gleiche Startparameter wie bisher
+      app.exit(0);
+    }
+  } catch (e) {
+    if (manual) await dialog.showMessageBox(win, { type: 'warning', message: 'Update nicht möglich', detail: e.message, buttons: ['OK'] });
+    else console.error('Update-Prüfung:', e.message);
+  } finally { updating = false; }
+}
+
 // ---------- Menü (Alt blendet es ein) ----------
 function menu() {
   const go = d => () => { const n = win.webContents.navigationHistory; if (d < 0 ? n.canGoBack() : n.canGoForward()) d < 0 ? n.goBack() : n.goForward(); };
@@ -79,6 +117,7 @@ function menu() {
       { label: 'Startseite', accelerator: 'Alt+Home', click: () => win.loadURL(START_URL) },
       { label: 'Im Browser öffnen', click: () => openExternal(win.webContents.getURL().startsWith('http') ? win.webContents.getURL() : START_URL) },
       { type: 'separator' },
+      { label: 'Nach Updates suchen', click: () => checkUpdates(true) },
       { label: `Version ${app.getVersion()}`, enabled: false },
       { role: 'quit', label: 'Beenden' },
     ] },
@@ -97,5 +136,11 @@ function menu() {
 }
 
 app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
-app.whenReady().then(() => { permissions(); menu(); createWindow(); });
+app.whenReady().then(() => {
+  permissions(); menu(); createWindow();
+  if (app.isPackaged || process.env.BRTWRST_UPDATE_URL) {
+    setTimeout(() => checkUpdates(false), 10000);
+    setInterval(() => checkUpdates(false), 4 * 3600 * 1000);
+  }
+});
 app.on('window-all-closed', () => app.quit());

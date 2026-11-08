@@ -50,3 +50,29 @@ npm run dist:win                            # Windows-Installer in dist/
 | `src/rcon.js` | Source-RCON-Client, eine Verbindung pro Auftrag, lange Antworten über mehrere Pakete |
 | `src/scan.js` | A2S-Scan und Mappool |
 | `test/` | Tests mit simuliertem CS2-Server |
+
+## Releases und Updates
+
+```sh
+npm version 0.1.1 --no-git-tag-version   # Version in package.json erhöhen
+git commit -am "Version 0.1.1" && git tag v0.1.1 && git push && git push origin v0.1.1
+```
+
+GitHub Actions (`.github/workflows/release.yml`) baut dann:
+- **Tests:** Sie laufen zuerst.
+- **Linux:** AppImage und `.deb`.
+- **Windows:** einen Installer (NSIS).
+- **Manifest:** `manifest.json` mit Größe und SHA-256 jeder Datei, signiert mit Ed25519 (`manifest.json.sig`), danach das GitHub-Release.
+
+**Wie die App aktualisiert:** 10 Sekunden nach dem Start und danach alle 4 Stunden, außerdem über das Menü „Nach Updates suchen“, holt sie sich `releases/latest/download/manifest.json`.
+1. Sie prüft die Signatur mit dem eingebauten öffentlichen Schlüssel (`src/update-key.js`).
+2. Sie nimmt nur höhere Versionen und lädt die passende Datei.
+3. Sie prüft Größe und SHA-256 der Datei.
+4. Sie fragt: „Jetzt neu starten?“
+
+Danach je nach System:
+- **Windows:** Der Installer läuft still (`/S`) und startet die App neu.
+- **Linux (AppImage):** Die neue Datei ersetzt die alte, die alte bleibt als `.AppImage.bak` liegen.
+- **Linux (.deb):** Die App zeigt nur einen Hinweis mit Download-Link.
+
+**Signaturschlüssel:** Der private Schlüssel liegt nur als Repository-Secret `BRTWRST_SIGNING_KEY` vor, im Format PEM (PKCS#8). Geht er verloren, braucht es ein neues Schlüsselpaar und eine App-Version mit dem neuen öffentlichen Schlüssel. Diese müssen alle einmal von Hand installieren.

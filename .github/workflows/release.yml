@@ -1,0 +1,82 @@
+# Release bauen und veröffentlichen: git tag v0.1.1 && git push origin v0.1.1
+# (Version in package.json muss zum Tag passen.)
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm test
+      - name: Tag passt zu package.json
+        run: |
+          V=$(node -p "require('./package.json').version")
+          [ "v$V" = "$GITHUB_REF_NAME" ] || { echo "::error::Tag $GITHUB_REF_NAME passt nicht zu package.json ($V)"; exit 1; }
+
+  build:
+    needs: test
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cmd: npx electron-builder --linux AppImage deb --publish never
+          - os: windows-latest
+            cmd: npx electron-builder --win nsis --publish never
+    runs-on: ${{ matrix.os }}
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'   # keine Code-Signatur (Windows warnt beim ersten Start)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: ${{ matrix.cmd }}
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.os }}
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.exe
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/download-artifact@v4
+        with: { path: rel, merge-multiple: true }
+      - name: Manifest erzeugen und signieren
+        env:
+          BRTWRST_SIGNING_KEY: ${{ secrets.BRTWRST_SIGNING_KEY }}
+        run: |
+          V=${GITHUB_REF_NAME#v}
+          NOTES=$(git for-each-ref --format='%(contents:subject)' "refs/tags/$GITHUB_REF_NAME" 2>/dev/null || true)
+          node scripts/manifest.js rel "$V" "$NOTES"
+      - name: Release veröffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=${GITHUB_REF_NAME#v}
+          gh release create "$GITHUB_REF_NAME" rel/* --title "BRTWRST $V" --notes-file <(cat <<EOF
+          **Windows:** \`BRTWRST-$V-win-x64.exe\` herunterladen und starten. Beim ersten Start warnt Windows ("Der Computer wurde durch Windows geschützt"): "Weitere Informationen" → "Trotzdem ausführen".
+
+          **Linux:** \`BRTWRST-$V-linux-x86_64.AppImage\` herunterladen, ausführbar machen (\`chmod +x\`) und starten. Aktualisiert sich selbst. Alternativ das \`.deb\` (ohne automatische Updates).
+
+          Updates werden signiert (manifest.json + manifest.json.sig, Ed25519) und von der App vor der Installation geprüft.
+          EOF
+          )

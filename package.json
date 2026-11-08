@@ -34,7 +34,8 @@
       ],
       "category": "Game",
       "icon": "build/icon.png",
-      "maintainer": "Team Bratwurst"
+      "maintainer": "Team Bratwurst",
+      "syncDesktopName": true
     },
     "win": {
       "target": [
@@ -51,5 +52,6 @@
   "devDependencies": {
     "electron": "^44.9.3",
     "electron-builder": "^26.18.0"
-  }
+  },
+  "desktopName": "brtwrst.desktop"
 }
