@@ -48,9 +48,15 @@ function rconServer({ password = '147', echo = true, silentSet = false, maps = [
 }
 
 /** A2S-Server mit Challenge (wie CS2). */
-function a2sServer(name, { challenge = true, port = 0 } = {}) {
+function a2sServer(name, { challenge = true, port = 0, players = [] } = {}) {
   const s = dgram.createSocket('udp4');
   s.on('message', (d, r) => {
+    if (d[4] === 0x55) {   // A2S_PLAYER: erst Challenge, dann Liste (Index, Name, Score int32, Dauer float32)
+      if (d.readInt32LE(5) === -1) { s.send(Buffer.from([255, 255, 255, 255, 0x41, 9, 8, 7, 6]), r.port, r.address); return; }
+      const parts = [Buffer.from([255, 255, 255, 255, 0x44, players.length])];
+      players.forEach((p, i) => { const n = Buffer.from(p.name + '\0'); const t = Buffer.alloc(8); t.writeInt32LE(p.score, 0); t.writeFloatLE(p.time, 4); parts.push(Buffer.from([i]), n, t); });
+      s.send(Buffer.concat(parts), r.port, r.address); return;
+    }
     if (challenge && d.length < 29) { s.send(Buffer.from([255, 255, 255, 255, 0x41, 1, 2, 3, 4]), r.port, r.address); return; }
     s.send(Buffer.concat([Buffer.from([255, 255, 255, 255, 0x49, 0x11]), Buffer.from(name + '\0de_dust2\0csgo\0Counter-Strike 2\0')]), r.port, r.address);
   });

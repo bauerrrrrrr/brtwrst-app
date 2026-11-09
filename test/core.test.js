@@ -78,6 +78,17 @@ test('Scan: Namen per A2S, Mappool per RCON vom ersten Server', async () => {
   assert.deepEqual(r.maps, ['ar_baggage', 'cs_italy', 'de_dust2', 'de_fachwerk', 'de_mirage']);
 });
 
+test('A2S_PLAYER: Namen und Kills mit Challenge', async () => {
+  const { a2sPlayers } = require('../src/scan');
+  const a = await a2sServer('23 MTA Haus 147', { players: [{ name: 'K41SER', score: 16, time: 1234.5 }, { name: 'Zange', score: 13, time: 99 }] });
+  const r = await a2sPlayers(`127.0.0.1:${a.port}`);
+  a.close();
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.players, [{ name: 'K41SER', score: 16, time: 1235 }, { name: 'Zange', score: 13, time: 99 }]);
+  const none = await a2sPlayers('127.0.0.1:9', { wait: 300 });
+  assert.equal(none.ok, false);
+});
+
 test('Absicherung: Domain, LAN-Adressen, Befehle', () => {
   assert.equal(isOwn('https://lan.brat.wurst.pw/index.php?p=rcon'), true);
   assert.equal(isOwn('https://brat.wurst.pw/lan/index.php?p=rcon'), true);

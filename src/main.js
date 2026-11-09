@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const { START_URL, isOwn, isLanAddr, validCmds } = require('./guard');
 const rcon = require('./rcon');
-const { scan } = require('./scan');
+const { scan, a2sPlayers } = require('./scan');
 const updater = require('./updater');
 const gsi = require('./gsi');
 const flatpak = require('./flatpak');
@@ -79,6 +79,11 @@ ipcMain.handle('brtwrst:scan', async (e, { list } = {}) => {
   return scan(clean);
 });
 
+ipcMain.handle('brtwrst:players', async (e, { addr } = {}) => {
+  if (!fromOwn(e)) return { ok: false, players: [], error: 'Nicht erlaubt' };
+  if (!isLanAddr(addr)) return { ok: false, players: [], error: 'Nur LAN-Adressen erlaubt' };
+  return a2sPlayers(addr);
+});
 ipcMain.handle('brtwrst:gsi-install', async (e, { token } = {}) => {
   if (!fromOwn(e)) return { ok: false, error: 'Nicht erlaubt' };
   if (typeof token !== 'string' || !/^[A-Za-z0-9._~-]{8,200}$/.test(token)) return { ok: false, error: 'Ungültiger Schlüssel' };

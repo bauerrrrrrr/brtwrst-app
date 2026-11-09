@@ -33,6 +33,38 @@ function a2s(list, { wait = 3000 } = {}) {
   });
 }
 
+/** A2S_PLAYER-Antwort (0x44) lesen → [{ name, score, time }] (Score ist bei CS meist die Kill-Zahl) */
+function parsePlayers(d) {
+  if (d.length < 6 || d[4] !== 0x44) return null;
+  const out = []; let o = 6;
+  for (let i = 0; i < d[5] && o < d.length; i++) {
+    o += 1;   // Index
+    const z = d.indexOf(0, o); if (z < 0 || z + 9 > d.length) break;
+    const name = d.toString('utf8', o, z); o = z + 1;
+    const score = d.readInt32LE(o), time = d.readFloatLE(o + 4); o += 8;
+    if (name) out.push({ name, score, time: Math.round(time) });
+  }
+  return out;
+}
+
+/** Spielerliste eines Servers per A2S_PLAYER (ohne Passwort, wie früher HLSW). */
+function a2sPlayers(addr, { wait = 1500 } = {}) {
+  const [host, port] = addr.split(':');
+  return new Promise(resolve => {
+    const sock = dgram.createSocket('udp4');
+    let done = false;
+    const end = v => { if (done) return; done = true; clearTimeout(t); try { sock.close(); } catch {} resolve(v); };
+    const t = setTimeout(() => end({ ok: false, players: [], error: 'Keine Antwort' }), wait);
+    const ask = ch => sock.send(Buffer.concat([Buffer.from([255, 255, 255, 255, 0x55]), ch]), +port, host);
+    sock.on('error', e => end({ ok: false, players: [], error: e.message }));
+    sock.on('message', d => {
+      if (d.length >= 9 && d[4] === 0x41) { ask(d.subarray(5, 9)); return; }
+      const p = parsePlayers(d); if (p) end({ ok: true, players: p });
+    });
+    sock.bind(0, () => ask(Buffer.from([255, 255, 255, 255])));
+  });
+}
+
 const MAP_RE = /^(de|cs|ar|dz|gd)_[a-z0-9_]+$/;
 
 /** Mappool aus der Ausgabe von „maps *“: eine Map pro Zeile, ohne Skyboxen, _vanity und Editor-Szenen. */
@@ -56,4 +88,4 @@ async function scan(list) {
   return { names, maps };
 }
 
-module.exports = { scan, a2s, parseMaps };
+module.exports = { scan, a2s, a2sPlayers, parsePlayers, parseMaps };

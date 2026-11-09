@@ -1,7 +1,7 @@
 {
   "name": "brtwrst",
   "productName": "BRTWRST",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Team-Bratwurst-Intranet als App, mit direktem RCON und LAN-Scan für die CS2-Server",
   "homepage": "https://github.com/bauerrrrrrr/brtwrst-app",
   "author": "Team Bratwurst",

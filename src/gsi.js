@@ -7,11 +7,11 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const FILE = 'gamestate_integration_brtwrst.cfg';
-const DATA = ['provider', 'map', 'round', 'player_id', 'player_state', 'player_weapons', 'player_match_stats', 'phase_countdowns'];
+const DATA = ['provider', 'map', 'round', 'player_id', 'player_state', 'player_weapons', 'player_match_stats', 'player_position', 'phase_countdowns'];
 
 /** Gleicher Aufbau wie die Download-Datei auf der Seite (app/pages/gsi.php). */
 function buildCfg(uri, token) {
-  return `"BRTWRST Beamer"\n{\n  "uri"       "${uri}"\n  "timeout"   "5.0"\n  "buffer"    "0.1"\n  "throttle"  "0.5"\n  "heartbeat" "10.0"\n`
+  return `"BRTWRST Beamer"\n{\n  "uri"       "${uri}"\n  "timeout"   "5.0"\n  "buffer"    "0.1"\n  "throttle"  "0.25"\n  "heartbeat" "10.0"\n`
     + `  "auth"\n  {\n    "token" "${token}"\n  }\n  "data"\n  {\n${DATA.map(d => `    "${d}" "1"\n`).join('')}  }\n}\n`;
 }
 
