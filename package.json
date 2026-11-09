@@ -1,7 +1,7 @@
 {
   "name": "brtwrst",
   "productName": "BRTWRST",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Team-Bratwurst-Intranet als App, mit direktem RCON und LAN-Scan für die CS2-Server",
   "homepage": "https://github.com/bauerrrrrrr/brtwrst-app",
   "author": "Team Bratwurst",
@@ -64,7 +64,7 @@
         }
       ],
       "category": "public.app-category.utilities",
-      "icon": "build/icon.png",
+      "icon": "build/icon-mac.png",
       "identity": "-",
       "hardenedRuntime": false,
       "gatekeeperAssess": false
