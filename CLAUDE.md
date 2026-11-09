@@ -60,6 +60,17 @@ npm run dist:linux | dist:win | dist:mac      # Pakete nach dist/
 - `lan.brat.wurst.pw` in `src/guard.js` ist nur geplant (kein HTTPS).
 - Festgelegte Mindestversion für die Website-Integration: 0.1.7 (nicht im Code erzwungen).
 
+## Doku-Pflege
+- Nur tatsächlich betroffene Doku-Stellen aktualisieren; keine unnötigen Umschreibungen oder Wiederholungen.
+- Nur den Ist-Zustand dokumentieren (mit Dateipfad als Beleg), nichts vermuten oder erfinden;
+  Unklares als offene Frage in `docs/open-points.md`.
+- Änderungen an `window.brtwrst` (`src/preload.js`, IPC in `src/main.js`, `src/guard.js`) oder `src/gsi.js`:
+  zuerst `teambratwurst/docs/integration.md` anpassen, dann hierher kopieren (Stand im Kopf aktualisieren).
+- Neue Umgebungsvariablen oder CI-Secrets: im selben Commit oben unter „Befehle“ eintragen (nur Namen, nie Werte).
+- Nicht sofort behobene Inkonsistenzen/Schulden als Stichpunkt in `docs/open-points.md`; behobene Punkte dort entfernen.
+- Mindestversion für die Website anheben → in `teambratwurst/docs/integration.md` (und Kopie) mit Datum und Grund eintragen.
+- Im Abschlussbericht kurz aufführen, welche Doku-Dateien aktualisiert wurden.
+
 ## Weitere Doku
 - `docs/architecture.md` – Aufbau, Prozesse, Update-/Release-Ablauf
 - `docs/integration.md` – Schnittstelle zur Website (Kopie)
