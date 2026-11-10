@@ -51,6 +51,8 @@ npm run dist:linux | dist:win | dist:mac      # Pakete nach dist/
 - Netzwerkziele der Bridge nur private IPv4-Adressen (`isLanAddr`).
 - Neue Bridge-Funktion = Schnittstellenänderung → `docs/integration.md` hier **und** in teambratwurst anpassen;
   die Website nutzt sie nur per Feature-Detection.
+- Commit-Nachrichten und PR-Beschreibungen ohne Attributionszeilen: kein `Claude-Session:`-Link,
+  kein `Co-Authored-By: Claude`, kein „Generated with Claude Code“.
 
 ## Stolperfallen
 - `src/gsi.js` muss dieselbe cfg erzeugen wie `teambratwurst/app/pages/gsi.php` (doppelt gepflegt).
