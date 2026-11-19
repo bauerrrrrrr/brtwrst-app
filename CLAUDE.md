@@ -60,6 +60,13 @@ npm run dist:linux | dist:win | dist:mac      # Pakete nach dist/
 - `lan.brat.wurst.pw` in `src/guard.js` ist nur geplant (kein HTTPS).
 - Festgelegte Mindestversion für die Website-Integration: 0.1.7 (nicht im Code erzwungen).
 
+## Release (nur auf ausdrückliche Anweisung, z. B. „Release 0.1.8“)
+Ein Push auf `main` mit neuer Version erreicht über Auto-Updates alle Nutzer. Ohne Anweisung die Version nicht erhöhen.
+1. `npm test` grün (der Hook `.claude/settings.json` prüft zusätzlich jede geänderte `.js`-Datei mit `node --check`).
+2. Schnittstelle geändert? `docs/integration.md` hier und in teambratwurst aktuell, ggf. Mindestversion eintragen.
+3. `npm version X.Y.Z --no-git-tag-version`; Commit-Betreff `BRTWRST X.Y.Z: <was neu ist>` (wird zum Update-Text).
+4. Push auf `main`; im Abschlussbericht Version, Betreff und aktualisierte Doku-Dateien nennen.
+
 ## Doku-Pflege
 - Nur tatsächlich betroffene Doku-Stellen aktualisieren; keine unnötigen Umschreibungen oder Wiederholungen.
 - Nur den Ist-Zustand dokumentieren (mit Dateipfad als Beleg), nichts vermuten oder erfinden;
