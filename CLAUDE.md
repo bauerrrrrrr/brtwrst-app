@@ -69,8 +69,9 @@ Ein Push auf `main` mit neuer Version erreicht über Auto-Updates alle Nutzer. O
    begründen, warum nicht (z. B. reine Info von GitHub).
 2. **Auf neueste stabile Versionen gehen**, nicht auf die Mindestversion, die eine Warnung beseitigt.
    `npm run versions` listet alles, was in `package.json`, in den `uses:`/`node-version`-Zeilen der Workflows und
-   in `flatpak/*.yml` steht. Jede Zeile `NEUER` anheben (Breaking Changes in Release-Notes/README prüfen) oder im
-   Bericht begründen. Kommt eine neue Art Komponente dazu (z. B. andere Paketquelle), `scripts/versions.js` erweitern.
+   in `flatpak/*.yml` steht, **und die Website** (`../teambratwurst`: Leaflet, PHP auf dem Server; dort Abschnitt
+   „Komponenten aktuell halten“). Jede Zeile `NEUER` anheben (Breaking Changes in Release-Notes/README prüfen) oder
+   im Bericht begründen. Kommt eine neue Art Komponente dazu (z. B. andere Paketquelle), `scripts/versions.js` erweitern.
 3. `npm test` grün (der Hook `.claude/settings.json` prüft zusätzlich jede geänderte `.js`-Datei mit `node --check`).
 4. Schnittstelle geändert? `docs/integration.md` hier und in teambratwurst aktuell, ggf. Mindestversion eintragen.
 5. `npm version X.Y.Z --no-git-tag-version`; Commit-Betreff `BRTWRST X.Y.Z: <was neu ist>` (wird zum Update-Text).

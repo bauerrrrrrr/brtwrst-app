@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Versionen prüfen (vor jedem Release, siehe CLAUDE.md): alles, was in package.json, den Workflows und im
-// Flatpak-Manifest steht, gegen die neueste stabile Version. Nur lesen, ändert nichts.
-//   npm run versions
+// Flatpak-Manifest steht, dazu die Website (Leaflet, PHP auf dem Server), gegen die neueste stabile Version.
+// Nur lesen, ändert nichts.
+//   npm run versions [-- <pfad zu teambratwurst>]   (Standard: ../teambratwurst neben diesem Repo)
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -10,7 +11,7 @@ const { execFileSync } = require('child_process');
 const root = path.join(__dirname, '..');
 const read = f => fs.readFileSync(path.join(root, f), 'utf8');
 const rows = [];
-const row = (was, ist, neu, hinweis = '') => rows.push({ was, ist, neu, ok: hinweis === '' && String(ist) === String(neu), hinweis });
+const row = (was, ist, neu, hinweis = '', info = false) => rows.push({ was, ist, neu, ok: (hinweis === '' || info) && String(ist) === String(neu), hinweis });
 
 /** Höchste stabile Version (vX.Y.Z bzw. branch/X.Y) aus den Refs eines Git-Repos. */
 function gitRefs(url) {
@@ -52,6 +53,19 @@ async function main() {
   try { br = max(gitRefs('https://github.com/flathub/org.electronjs.Electron2.BaseApp').map(r => /^refs\/heads\/branch\/(\d+\.\d+)$/.exec(r)?.[1]).filter(Boolean)); } catch {}
   row('Flatpak runtime-version', rt, br);
   row('Flatpak base-version', base, br, rt !== base ? 'runtime- und base-version verschieden' : '');
+
+  // Website (teambratwurst): Leaflet (vendored) und PHP auf dem Server (steht von Hand in deren CLAUDE.md)
+  const web = path.resolve(process.argv[2] || path.join(root, '..', 'teambratwurst'));
+  if (fs.existsSync(path.join(web, 'index.php'))) {
+    let ll = '?', neu = '?';
+    try { ll = /Leaflet (\d+\.\d+\.\d+)/.exec(fs.readFileSync(path.join(web, 'assets/vendor/leaflet/leaflet.js'), 'utf8').slice(0, 300))[1]; } catch {}
+    try { neu = execFileSync('npm', ['view', 'leaflet', 'version'], { encoding: 'utf8', timeout: 30000, shell: process.platform === 'win32' }).trim(); } catch {}
+    row('Website Leaflet', ll, neu);
+    let php = '?', phpNeu = '?';
+    try { php = /PHP auf dem Server: (\d+\.\d+\.\d+)/.exec(fs.readFileSync(path.join(web, 'CLAUDE.md'), 'utf8'))[1]; } catch {}
+    try { phpNeu = max(gitRefs('https://github.com/php/php-src').map(r => /^refs\/tags\/php-(\d+\.\d+\.\d+)$/.exec(r)?.[1]).filter(Boolean)); } catch {}
+    row('Website PHP (Server)', php, phpNeu, 'Stand von Hand in teambratwurst/CLAUDE.md, in Plesk prüfen', true);
+  } else row('Website', '–', '–', `nicht gefunden (${web}); Pfad als Argument angeben`);
 
   const w = Math.max(...rows.map(r => r.was.length));
   for (const r of rows) console.log(`${r.ok ? '  ok ' : 'NEUER'}  ${r.was.padEnd(w)}  ${String(r.ist).padEnd(8)} → ${r.neu}${r.hinweis ? `  (${r.hinweis})` : ''}`);
