@@ -61,6 +61,15 @@ async function main() {
     try { ll = /Leaflet (\d+\.\d+\.\d+)/.exec(fs.readFileSync(path.join(web, 'assets/vendor/leaflet/leaflet.js'), 'utf8').slice(0, 300))[1]; } catch {}
     try { neu = execFileSync('npm', ['view', 'leaflet', 'version'], { encoding: 'utf8', timeout: 30000, shell: process.platform === 'win32' }).trim(); } catch {}
     row('Website Leaflet', ll, neu);
+    // Plakat-Werkzeug (tools/posters/package.json: Schriften für make.py/render.js)
+    try {
+      const pp = JSON.parse(fs.readFileSync(path.join(web, 'tools/posters/package.json'), 'utf8'));
+      for (const [name, range] of Object.entries({ ...pp.dependencies, ...pp.devDependencies })) {
+        let v = '?';
+        try { v = execFileSync('npm', ['view', name, 'version'], { encoding: 'utf8', timeout: 30000, shell: process.platform === 'win32' }).trim(); } catch {}
+        row(`Website Plakate ${name}`, String(range).replace(/^[\^~>=<\s]+/, ''), v);
+      }
+    } catch {}
     // PHP: Ziel ist die höchste Version, die Plesk anbietet; beide Werte stehen von Hand in teambratwurst/CLAUDE.md.
     const md = (() => { try { return fs.readFileSync(path.join(web, 'CLAUDE.md'), 'utf8'); } catch { return ''; } })();
     const php = /PHP auf dem Server: (\d+\.\d+\.\d+)/.exec(md)?.[1] || '?', plesk = /Plesk bietet höchstens: (\d+\.\d+\.\d+)/.exec(md)?.[1] || '?';
