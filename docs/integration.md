@@ -1,6 +1,6 @@
 # Integration Website ↔ BRTWRST-App
 
-> Kopie, Quelle: teambratwurst (`docs/integration.md`), Stand: 2026-11-22 (Branch `claude/quirky-franklin-r6qj4h`).
+> Kopie, Quelle: teambratwurst (`docs/integration.md`), Stand: 2026-11-22, App 0.1.8.
 > Änderungen zuerst in teambratwurst vornehmen und hierher kopieren.
 
 **Quelle der Wahrheit:** diese Datei (`teambratwurst/docs/integration.md`).
@@ -16,7 +16,7 @@ CS2-Servern im LAN, GitHub (Updates) und dem lokalen Dateisystem (GSI-Datei).
 ## Wer bekommt `window.brtwrst`?
 - Nur Seiten, deren URL `isOwn()` erfüllt (`brtwrst-app/src/guard.js`):
   - `https://brat.wurst.pw/lan/…` (produktiv; bis 0.1.7 zusätzlich das nur geplante `https://lan.brat.wurst.pw/`,
-    danach entfernt, solange die Subdomain kein HTTPS hat)
+    ab 0.1.8 entfernt, solange die Subdomain kein HTTPS hat)
   - mit `BRTWRST_URL` gesetzt zusätzlich deren Origin (lokales Testen)
 - Der Hauptprozess prüft bei jedem Aufruf erneut die Herkunft (`fromOwn`, `brtwrst-app/src/main.js`).
 - Fremde Links öffnen im System-Browser; Berechtigungen nur `clipboard-sanitized-write` für eigene Seiten.
@@ -24,12 +24,12 @@ CS2-Servern im LAN, GitHub (Updates) und dem lokalen Dateisystem (GSI-Datei).
 ## API `window.brtwrst`
 | Member | Signatur → Antwort | Nutzung in der Website |
 |---|---|---|
-| `version` | String, z. B. `"0.1.7"` | `assets/rcon-exec.js` (Anzeige) |
+| `version` | String, z. B. `"0.1.8"` | `assets/rcon-exec.js` (Anzeige) |
 | `platform` | `process.platform` (`win32`, `darwin`, `linux`) | `app/pages/gsi.php` (macOS-Hinweis) |
 | `rcon(addr, pass, cmds)` | → `{ ok, results: [{cmd, out}], error? }`; bei Abbruch ist `results` ggf. teilweise gefüllt | `assets/rcon-exec.js` (Befehle, Config-Prüfung, `status`, `listid`, Kick/Unban) |
 | `scan(list)` | `list = [[id, "ip:port"], …]` → `{ names: {id: name}, maps: [...], error? }` | `assets/rcon-exec.js` („Server laden“) |
 | `players(addr)` | → `{ ok, players: [{name, score, time}], error? }` (A2S_PLAYER, `score` meist Kills) | `assets/rcon-exec.js` (`sendSrv`: Kills gehen per `rcon_srv` an die Gegnerkacheln im Beamer) |
-| `installGsi(token, cfg)` | → `{ ok, paths: [...] }` bzw. `{ ok: false, error }`; `cfg` = Dateiinhalt von der Website (bis 0.1.7 ignoriert, die App baute die Datei selbst) | `app/pages/gsi.php` |
+| `installGsi(token, cfg)` | → `{ ok, paths: [...] }` bzw. `{ ok: false, error }`; `cfg` = Dateiinhalt von der Website (ab 0.1.8; bis 0.1.7 ignoriert, die App baute die Datei selbst) | `app/pages/gsi.php` |
 
 ### Validierung in der App (`brtwrst-app/src/guard.js`, `src/main.js`)
 - `addr`: `IPv4:Port`, nur 10/8, 172.16/12, 192.168/16, 127/8.
