@@ -1,6 +1,6 @@
 # Offene Punkte – brtwrst-app
 
-Stand: 2026-11-22 (0.1.8).
+Stand: 2026-11-22 (0.1.9).
 
 ## Inkonsistenzen Website ↔ App
 - **Installationen bis 0.1.7** bauen die GSI-cfg noch selbst (ohne `gsi_url` der Website); ab 0.1.8 kommt sie von
@@ -13,10 +13,6 @@ Stand: 2026-11-22 (0.1.8).
   (CS2 auf anderer Platte → Datei manuell von der Website).
 - Bridge nur IPv4 und private Netze; `scan` höchstens 256 Server, `rcon` höchstens 200 Befehle.
 - Verlust von `BRTWRST_SIGNING_KEY` erfordert manuelle Neuinstallation bei allen (`README.md`).
-
-## Veraltete Komponenten (Stand `npm run versions`, 2026-11-22)
-- `electron` 44 → 45 und Flatpak-Runtime/BaseApp 25.08 → 26.08 (`flatpak/pw.wurst.brat.Brtwrst.yml`): mit dem
-  nächsten Release anheben (Release-Checkliste, Schritt 2).
 
 ## Veraltete Unterpakete (npm warn deprecated, Stand 2026-11-22)
 - `glob@7`/`inflight` (über `@electron/asar`), `rimraf@2` (über `electron-winstaller` → `temp`), `boolean`

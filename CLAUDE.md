@@ -9,7 +9,7 @@ Die App hat keine eigene Oberfläche, Login oder Daten – alles kommt von der W
 (Kopie; Quelle der Wahrheit ist `teambratwurst/docs/integration.md`).
 
 ## Tech-Stack
-- Electron 44, Node 26 (CI), CommonJS, keine Laufzeit-Abhängigkeiten (`dependencies` leer)
+- Electron 45, Node 26 (CI), CommonJS, keine Laufzeit-Abhängigkeiten (`dependencies` leer)
 - electron-builder: AppImage, NSIS, dmg/zip (arm64); Flatpak per `flatpak-builder` aus dem Linux-Build
 - Tests: `node:test` mit simuliertem CS2-Server (`test/fake-server.js`) und nachgebautem Flatpak-Portal über den
   eigenen D-Bus-Client (`test/flatpak.test.js`, braucht `dbus-daemon`); keine Test-Abhängigkeiten außer Electron-Werkzeugen
