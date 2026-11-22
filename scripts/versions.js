@@ -61,6 +61,11 @@ async function main() {
     try { ll = /Leaflet (\d+\.\d+\.\d+)/.exec(fs.readFileSync(path.join(web, 'assets/vendor/leaflet/leaflet.js'), 'utf8').slice(0, 300))[1]; } catch {}
     try { neu = execFileSync('npm', ['view', 'leaflet', 'version'], { encoding: 'utf8', timeout: 30000, shell: process.platform === 'win32' }).trim(); } catch {}
     row('Website Leaflet', ll, neu);
+    // MediaPipe für den Scherenschnitt der Plakat-Werkstatt (Version in assets/werkstatt.js, per jsDelivr)
+    let mp = '?', mpNeu = '?';
+    try { mp = /tasks-vision@(\d+\.\d+\.\d+)/.exec(fs.readFileSync(path.join(web, 'assets/werkstatt.js'), 'utf8'))[1]; } catch {}
+    try { mpNeu = execFileSync('npm', ['view', '@mediapipe/tasks-vision', 'version'], { encoding: 'utf8', timeout: 30000, shell: process.platform === 'win32' }).trim(); } catch {}
+    row('Website MediaPipe tasks-vision', mp, mpNeu);
     // Plakat-Werkzeug (tools/posters/package.json: Schriften für make.py/render.js)
     try {
       const pp = JSON.parse(fs.readFileSync(path.join(web, 'tools/posters/package.json'), 'utf8'));
