@@ -15,8 +15,7 @@ CS2-Servern im LAN, GitHub (Updates) und dem lokalen Dateisystem (GSI-Datei).
 
 ## Wer bekommt `window.brtwrst`?
 - Nur Seiten, deren URL `isOwn()` erfüllt (`brtwrst-app/src/guard.js`):
-  - `https://brat.wurst.pw/lan/…` (produktiv; bis 0.1.7 zusätzlich das nur geplante `https://lan.brat.wurst.pw/`,
-    ab 0.1.8 entfernt, solange die Subdomain kein HTTPS hat)
+  - `https://brat.wurst.pw/lan/…` (produktiv; `https://lan.brat.wurst.pw/` bewusst nicht, solange die Subdomain kein HTTPS hat)
   - mit `BRTWRST_URL` gesetzt zusätzlich deren Origin (lokales Testen)
 - Der Hauptprozess prüft bei jedem Aufruf erneut die Herkunft (`fromOwn`, `brtwrst-app/src/main.js`).
 - Fremde Links öffnen im System-Browser; Berechtigungen nur `clipboard-sanitized-write` für eigene Seiten.
@@ -41,7 +40,7 @@ Keine Bridge-Funktion; die Website nutzt nur, dass die App fremde Adressen aus `
 | `rcon(addr, pass, cmds)` | → `{ ok, results: [{cmd, out}], error? }`; bei Abbruch ist `results` ggf. teilweise gefüllt | `assets/rcon-exec.js` (Befehle, Config-Prüfung, `status`, `listid`, Kick/Unban) |
 | `scan(list)` | `list = [[id, "ip:port"], …]` → `{ names: {id: name}, maps: [...], error? }` | `assets/rcon-exec.js` („Server laden“) |
 | `players(addr)` | → `{ ok, players: [{name, score, time}], error? }` (A2S_PLAYER, `score` meist Kills) | `assets/rcon-exec.js` (`sendSrv`: Kills gehen per `rcon_srv` an die Gegnerkacheln im Beamer) |
-| `installGsi(token, cfg)` | → `{ ok, paths: [...] }` bzw. `{ ok: false, error }`; `cfg` = Dateiinhalt von der Website (ab 0.1.8; bis 0.1.7 ignoriert, die App baute die Datei selbst) | `app/pages/gsi.php` |
+| `installGsi(token, cfg)` | → `{ ok, paths: [...] }` bzw. `{ ok: false, error }`; `cfg` = Dateiinhalt von der Website | `app/pages/gsi.php` |
 
 ### Validierung in der App (`brtwrst-app/src/guard.js`, `src/main.js`)
 - `addr`: `IPv4:Port`, nur 10/8, 172.16/12, 192.168/16, 127/8.
@@ -71,7 +70,6 @@ Keine Bridge-Funktion; die Website nutzt nur, dass die App fremde Adressen aus `
   geht als `cfg` an `installGsi`; die App schreibt sie unverändert (`brtwrst-app/src/gsi.js`).
   - Felder: Name `"BRTWRST Beamer"`, `timeout 5.0`, `buffer 0.1`, `throttle 0.25`, `heartbeat 10.0`,
     `data`: `provider, map, round, player_id, player_state, player_weapons, player_match_stats, player_position, phase_countdowns`.
-  - App bis 0.1.7 baut die Datei noch selbst (gleiche Felder, URI = `gsi.php` neben der aufrufenden Seite, ohne `gsi_url`).
   - Mit der App muss `gsi_url` auf `https://brat.wurst.pw/lan/…` oder eine LAN-IPv4 zeigen, sonst lehnt sie ab.
 - Die App sucht Steam-Bibliotheken (Registry bzw. bekannte Linux-Pfade + `libraryfolders.vdf`) und schreibt in
   jeden gefundenen `…/Counter-Strike Global Offensive/game/csgo/cfg/`. Unter macOS lehnt sie ab.

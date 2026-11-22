@@ -2,10 +2,6 @@
 
 Stand: 2026-11-22 (0.2.2).
 
-## Inkonsistenzen Website ↔ App
-- **Installationen bis 0.1.7** bauen die GSI-cfg noch selbst (ohne `gsi_url` der Website); ab 0.1.8 kommt sie von
-  der Website (`src/gsi.js`, `src/guard.js`). Auto-Update zieht sie nach.
-
 ## Einschränkungen
 - Keine Code-Signatur (Windows), macOS nur ad-hoc signiert → Warnungen beim ersten Start.
 - Kein Intel-Mac-Build; Mac-Nutzer mit Intel bekommen kein Update-Ziel (`mac-x64` fehlt im Manifest).
