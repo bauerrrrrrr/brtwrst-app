@@ -1,6 +1,6 @@
 # Offene Punkte – brtwrst-app
 
-Stand: 2026-11-22 (0.1.9).
+Stand: 2026-11-22 (0.2.0).
 
 ## Inkonsistenzen Website ↔ App
 - **Installationen bis 0.1.7** bauen die GSI-cfg noch selbst (ohne `gsi_url` der Website); ab 0.1.8 kommt sie von
