@@ -11,6 +11,7 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test \"test/*.test.js\"",
+    "versions": "node scripts/versions.js",
     "dist:linux": "electron-builder --linux AppImage",
     "dist:win": "electron-builder --win nsis",
     "dist:mac": "electron-builder --mac dmg zip --arm64"

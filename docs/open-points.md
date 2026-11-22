@@ -14,6 +14,10 @@ Stand: 2026-11-22 (0.1.8).
 - Bridge nur IPv4 und private Netze; `scan` höchstens 256 Server, `rcon` höchstens 200 Befehle.
 - Verlust von `BRTWRST_SIGNING_KEY` erfordert manuelle Neuinstallation bei allen (`README.md`).
 
+## Veraltete Komponenten (Stand `npm run versions`, 2026-11-22)
+- `electron` 44 → 45 und Flatpak-Runtime/BaseApp 25.08 → 26.08 (`flatpak/pw.wurst.brat.Brtwrst.yml`): mit dem
+  nächsten Release anheben (Release-Checkliste, Schritt 2).
+
 ## Offene Fragen
 - **403 durch Rate-Limit des Hosters?** Während eines CS2-Matches (2026-11-21) wurde die eigene IP für
   brat.wurst.pw gesperrt (nginx: „access forbidden by rule“). Vermutete Ursache: GSI-POSTs der von

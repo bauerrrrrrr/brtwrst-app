@@ -20,6 +20,7 @@ npm install
 npm start                                     # lädt https://brat.wurst.pw/lan/
 BRTWRST_URL=http://127.0.0.1:8099/ npm start  # gegen lokale Website (Origin gilt dann als eigene Seite)
 npm test                                      # node --test "test/*.test.js"
+npm run versions                              # Komponenten gegen neueste stabile Version (scripts/versions.js)
 npm run dist:linux | dist:win | dist:mac      # Pakete nach dist/
 ```
 - Release: `npm version X.Y.Z --no-git-tag-version`, committen mit Betreff `BRTWRST X.Y.Z: <was neu ist>`,
@@ -40,7 +41,7 @@ npm run dist:linux | dist:win | dist:mac      # Pakete nach dist/
 | `src/updater.js`, `src/update-key.js` | Signierte Updates (Manifest + Ed25519), Tausch je Plattform |
 | `src/flatpak.js`, `src/dbus.js` | Flatpak-Update über das Portal, eigener D-Bus-Client |
 | `src/offline.html` | Fehlerseite, wenn die Website nicht lädt |
-| `scripts/` | `manifest.js` (Release-Manifest signieren), `flatpak-build.sh` |
+| `scripts/` | `manifest.js` (Release-Manifest signieren), `flatpak-build.sh`, `versions.js` (Versionsprüfung) |
 | `flatpak/`, `build/` | Flatpak-Manifest/Starter/Metainfo/GPG-Pubkey; Icons |
 | `test/` | Tests (RCON, Scan, GSI, Updater, Flatpak, macOS-Tausch) |
 
@@ -66,10 +67,10 @@ Ein Push auf `main` mit neuer Version erreicht über Auto-Updates alle Nutzer. O
 1. **Letzten Release-Lauf auswerten:** Annotations (Warnungen, Notices, Fehler) des letzten Laufs von `release.yml`
    und `flatpak-check.yml` lesen (GitHub-Tools, `actions_list`/`get_job_logs`), Ursachen beheben oder im Bericht
    begründen, warum nicht (z. B. reine Info von GitHub).
-2. **Auf neueste stabile Versionen gehen**, nicht auf die Mindestversion, die eine Warnung beseitigt:
-   GitHub-Actions (höchste Hauptversion ohne Vorabversion, Breaking Changes in deren README prüfen), Node in der CI
-   (neueste LTS), `electron`, `electron-builder`, `dbus-next`, Flatpak-Runtime/BaseApp (`flatpak/*.yml`).
-   Ausnahmen nur mit Begründung im Bericht.
+2. **Auf neueste stabile Versionen gehen**, nicht auf die Mindestversion, die eine Warnung beseitigt.
+   `npm run versions` listet alles, was in `package.json`, in den `uses:`/`node-version`-Zeilen der Workflows und
+   in `flatpak/*.yml` steht. Jede Zeile `NEUER` anheben (Breaking Changes in Release-Notes/README prüfen) oder im
+   Bericht begründen. Kommt eine neue Art Komponente dazu (z. B. andere Paketquelle), `scripts/versions.js` erweitern.
 3. `npm test` grün (der Hook `.claude/settings.json` prüft zusätzlich jede geänderte `.js`-Datei mit `node --check`).
 4. Schnittstelle geändert? `docs/integration.md` hier und in teambratwurst aktuell, ggf. Mindestversion eintragen.
 5. `npm version X.Y.Z --no-git-tag-version`; Commit-Betreff `BRTWRST X.Y.Z: <was neu ist>` (wird zum Update-Text).
