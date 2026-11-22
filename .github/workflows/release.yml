@@ -21,7 +21,7 @@ jobs:
       tag: ${{ steps.v.outputs.tag }}
       go: ${{ steps.v.outputs.go }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: v
         name: Neue Version?
         run: |
@@ -41,8 +41,8 @@ jobs:
     if: needs.version.outputs.go == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm test
@@ -62,13 +62,13 @@ jobs:
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'   # keine Code-Signatur (Windows warnt beim ersten Start)
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: ${{ matrix.cmd }}
         shell: bash
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist-${{ matrix.os }}
           path: |
@@ -77,7 +77,7 @@ jobs:
             dist/*.dmg
             dist/*.zip
           if-no-files-found: error
-      - uses: actions/upload-artifact@v4   # Grundlage fürs Flatpak, kommt nicht ins Release
+      - uses: actions/upload-artifact@v7   # Grundlage fürs Flatpak, kommt nicht ins Release
         if: runner.os == 'Linux'
         with:
           name: linux-unpacked
@@ -97,8 +97,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v7
         with: { name: linux-unpacked, path: dist }
       - name: Flatpak-Werkzeuge
         run: |
@@ -117,24 +117,24 @@ jobs:
           [ "$ID" = "$PUB" ] || { echo "::error::Secret passt nicht zu flatpak/brtwrst-flatpak.asc ($ID ≠ $PUB)"; exit 1; }
           echo "GNUPGHOME=$GNUPGHOME" >> "$GITHUB_ENV"; echo "GPG_ID=$ID" >> "$GITHUB_ENV"
       - id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Bauen und signieren
         env:
           TAG: ${{ needs.version.outputs.tag }}
         run: scripts/flatpak-build.sh "${TAG#v}" site "$GPG_ID" "${{ steps.pages.outputs.base_url }}/"
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with: { path: site }
       - id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
   release:
     needs: [version, build, flatpak]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 22 }
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with: { path: rel, pattern: 'dist-*', merge-multiple: true }
       - name: Manifest erzeugen und signieren
         env:

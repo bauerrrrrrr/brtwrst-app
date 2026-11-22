@@ -11,8 +11,8 @@ jobs:
   flatpak:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npx electron-builder --linux dir --publish never && tar -czf dist/linux-unpacked.tar.gz -C dist linux-unpacked
