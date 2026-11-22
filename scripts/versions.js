@@ -61,10 +61,12 @@ async function main() {
     try { ll = /Leaflet (\d+\.\d+\.\d+)/.exec(fs.readFileSync(path.join(web, 'assets/vendor/leaflet/leaflet.js'), 'utf8').slice(0, 300))[1]; } catch {}
     try { neu = execFileSync('npm', ['view', 'leaflet', 'version'], { encoding: 'utf8', timeout: 30000, shell: process.platform === 'win32' }).trim(); } catch {}
     row('Website Leaflet', ll, neu);
-    let php = '?', phpNeu = '?';
-    try { php = /PHP auf dem Server: (\d+\.\d+\.\d+)/.exec(fs.readFileSync(path.join(web, 'CLAUDE.md'), 'utf8'))[1]; } catch {}
+    // PHP: Ziel ist die höchste Version, die Plesk anbietet; beide Werte stehen von Hand in teambratwurst/CLAUDE.md.
+    const md = (() => { try { return fs.readFileSync(path.join(web, 'CLAUDE.md'), 'utf8'); } catch { return ''; } })();
+    const php = /PHP auf dem Server: (\d+\.\d+\.\d+)/.exec(md)?.[1] || '?', plesk = /Plesk bietet höchstens: (\d+\.\d+\.\d+)/.exec(md)?.[1] || '?';
+    let phpNeu = '?';
     try { phpNeu = max(gitRefs('https://github.com/php/php-src').map(r => /^refs\/tags\/php-(\d+\.\d+\.\d+)$/.exec(r)?.[1]).filter(Boolean)); } catch {}
-    row('Website PHP (Server)', php, phpNeu, 'Stand von Hand in teambratwurst/CLAUDE.md, in Plesk prüfen', true);
+    row('Website PHP (Server/Plesk)', php, plesk, `in Plesk nachsehen und in teambratwurst/CLAUDE.md eintragen; neueste PHP: ${phpNeu}`, true);
   } else row('Website', '–', '–', `nicht gefunden (${web}); Pfad als Argument angeben`);
 
   const w = Math.max(...rows.map(r => r.was.length));
