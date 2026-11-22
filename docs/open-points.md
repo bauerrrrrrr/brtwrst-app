@@ -24,3 +24,9 @@ Nur dokumentiert, nichts behoben. Stand: Commit `d167099` (0.1.7, 2026-11-09).
   `desktopName` `brtwrst.desktop` (`package.json`, `flatpak/`). Ob gewollt, ist unklar.
 - `scripts/flatpak-build.sh` schreibt Version/Datum per `sed` direkt in `flatpak/pw.wurst.brat.Brtwrst.metainfo.xml`
   (lokal ausgeführt verändert es eine versionierte Datei).
+
+## Offene Fragen
+- **403 durch Rate-Limit des Hosters?** Während eines CS2-Matches (2026-11-21) wurde die eigene IP für
+  brat.wurst.pw gesperrt (nginx: „access forbidden by rule“). Vermutete Ursache: GSI-POSTs der von
+  `src/gsi.js` erzeugten cfg (`throttle 0.25`). Offen: Grenze beim Hoster erfragen; Details in
+  `teambratwurst/docs/open-points.md`.
