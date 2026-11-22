@@ -19,8 +19,8 @@ flowchart LR
 
 ## Prozesse und Verantwortung
 - **Hauptprozess** (`src/main.js`): ein Fenster (Single-Instance-Lock), Fenstergröße in
-  `<userData>/fenster.json`, Menü (Alt blendet ein), Navigation: eigene URLs bleiben im Fenster, alles andere
-  geht in den System-Browser. Bei Ladefehler `src/offline.html`.
+  `<userData>/fenster.json`, Menü (Alt blendet ein), Navigation: eigene URLs und die Steam-Anmeldung der Website
+  (`isSteamLogin`, ab 0.2.1; Titel „Steam-Anmeldung …“, Esc bricht ab) bleiben im Fenster, alles andere geht in den System-Browser. Bei Ladefehler `src/offline.html`.
 - **Preload** (`src/preload.js`): fragt synchron `brtwrst:is-own` und stellt nur dann `window.brtwrst` bereit.
 - **Guard** (`src/guard.js`): `START_URL` (`BRTWRST_URL` oder `https://brat.wurst.pw/lan/`), `ALLOWED`-Origins,
   `isLanAddr`, `validCmds`.

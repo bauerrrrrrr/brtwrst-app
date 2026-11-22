@@ -4,7 +4,7 @@ const { app, BrowserWindow, ipcMain, shell, Menu, session, dialog } = require('e
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-const { START_URL, isOwn, isLanAddr, validCmds, validGsiCfg } = require('./guard');
+const { START_URL, isOwn, isSteamLogin, isLanAddr, validCmds, validGsiCfg } = require('./guard');
 const rcon = require('./rcon');
 const { scan, a2sPlayers } = require('./scan');
 const updater = require('./updater');
@@ -39,13 +39,24 @@ function createWindow() {
   if (b.max) win.maximize();
   win.on('close', saveBounds);
 
-  // Eigene Seiten bleiben im Fenster, alles andere geht in den System-Browser.
-  win.webContents.on('will-navigate', (e, url) => { if (!isOwn(url)) { e.preventDefault(); openExternal(url); } });
+  // Eigene Seiten und die Steam-Anmeldung (Login der Website) bleiben im Fenster, alles andere geht in den System-Browser.
+  // Steam-Seiten bekommen kein window.brtwrst (preload.js) und keine Berechtigungen (permissions()).
+  win.webContents.on('will-navigate', (e, url) => { if (!isOwn(url) && !isSteamLogin(url)) { e.preventDefault(); openExternal(url); } });
+  // Esc auf der Steam-Seite bricht die Anmeldung ab
+  win.webContents.on('before-input-event', (e, i) => {
+    if (i.type === 'keyDown' && i.key === 'Escape' && isSteamLogin(win.webContents.getURL())) { e.preventDefault(); win.loadURL(START_URL); }
+  });
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (isOwn(url)) win.loadURL(url); else openExternal(url);
     return { action: 'deny' };
   });
-  win.webContents.on('page-title-updated', (e, t) => { e.preventDefault(); win.setTitle(t ? `${t} · BRTWRST` : 'BRTWRST'); });
+  win.webContents.on('page-title-updated', (e, t) => {
+    e.preventDefault();
+    // Ohne Adressleiste: zeigen, dass gerade Steam angezeigt wird
+    const cur = win.webContents.getURL();
+    if (isSteamLogin(cur)) t = `Steam-Anmeldung · ${new URL(cur).hostname} (Esc bricht ab)`;
+    win.setTitle(t ? `${t} · BRTWRST` : 'BRTWRST');
+  });
   win.webContents.on('did-fail-load', (e, code, desc, url, isMain) => {
     if (!isMain || code === -3) return;   // -3 = abgebrochen (z. B. durch Weiterleitung)
     win.loadFile(path.join(__dirname, 'offline.html'), { query: { url: START_URL, err: desc } });
