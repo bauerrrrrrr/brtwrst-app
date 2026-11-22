@@ -1,6 +1,6 @@
 # Integration Website ↔ BRTWRST-App
 
-> Kopie, Quelle: teambratwurst (`docs/integration.md`), Stand: 2026-11-22, App 0.1.8.
+> Kopie, Quelle: teambratwurst (`docs/integration.md`), Stand: 2026-11-22, App 0.2.0.
 > Änderungen zuerst in teambratwurst vornehmen und hierher kopieren.
 
 **Quelle der Wahrheit:** diese Datei (`teambratwurst/docs/integration.md`).
@@ -24,7 +24,7 @@ CS2-Servern im LAN, GitHub (Updates) und dem lokalen Dateisystem (GSI-Datei).
 ## API `window.brtwrst`
 | Member | Signatur → Antwort | Nutzung in der Website |
 |---|---|---|
-| `version` | String, z. B. `"0.1.8"` | `assets/rcon-exec.js` (Anzeige) |
+| `version` | String, z. B. `"0.2.0"` | `assets/app.js` (Zeile „BRTWRST-App x.y.z“ unten in der Seitenleiste, Hinweis bei zu alter App), `assets/rcon-exec.js` (Anzeige) |
 | `platform` | `process.platform` (`win32`, `darwin`, `linux`) | `app/pages/gsi.php` (macOS-Hinweis) |
 | `rcon(addr, pass, cmds)` | → `{ ok, results: [{cmd, out}], error? }`; bei Abbruch ist `results` ggf. teilweise gefüllt | `assets/rcon-exec.js` (Befehle, Config-Prüfung, `status`, `listid`, Kick/Unban) |
 | `scan(list)` | `list = [[id, "ip:port"], …]` → `{ names: {id: name}, maps: [...], error? }` | `assets/rcon-exec.js` („Server laden“) |
