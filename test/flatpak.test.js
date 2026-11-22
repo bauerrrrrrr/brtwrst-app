@@ -1,4 +1,4 @@
-// D-Bus-Client und Flatpak-Update gegen einen eigenen Session-Bus mit nachgebautem Portal (dbus-next, nur für Tests).
+// D-Bus-Client und Flatpak-Update gegen einen eigenen Session-Bus mit nachgebautem Portal (ohne Fremdpakete).
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert');
@@ -6,7 +6,7 @@ const { spawn, execFileSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { encodeMessage, decodeMessage, splitSig } = require('../src/dbus');
+const { Bus, T, encodeMessage, decodeMessage, splitSig } = require('../src/dbus');
 const flatpak = require('../src/flatpak');
 const updater = require('../src/updater');
 
@@ -44,37 +44,35 @@ async function withPortal(behaviour, fn) {
 <busconfig><type>session</type><listen>unix:path=${sockPath}</listen><auth>EXTERNAL</auth>
 <policy context="default"><allow send_destination="*"/><allow receive_sender="*"/><allow own="*"/></policy></busconfig>`);
   const daemon = spawn('dbus-daemon', ['--config-file', cfg, '--nofork', '--print-address'], { stdio: ['ignore', 'pipe', 'inherit'] });
-  const addr = await new Promise(r => daemon.stdout.once('data', d => r(d.toString().trim())));
-  const dbus = require('dbus-next');
-  const { Interface } = dbus.interface;
-  const bus = dbus.sessionBus({ busAddress: addr });
-  const calls = [];
-
-  class Monitor extends Interface {
-    Update(parent, opts) {
-      calls.push('Update');
-      setTimeout(() => {
-        for (const ev of behaviour) this.Progress(Object.fromEntries(Object.entries(ev).map(([k, v]) => [k, new dbus.Variant(typeof v === 'string' ? 's' : 'u', v)])));
-      }, 50);
-    }
-    Close() { calls.push('Close'); }
-    Progress(info) { return info; }
-  }
-  Monitor.configureMembers({ methods: { Update: { inSignature: 'sa{sv}', outSignature: '' }, Close: { inSignature: '', outSignature: '' } }, signals: { Progress: { signature: 'a{sv}' } } });
-  class Portal extends Interface {
-    CreateUpdateMonitor(opts) {
-      calls.push('Create');
-      const p = '/org/freedesktop/portal/Flatpak/update_monitor/1/0';
-      bus.export(p, new Monitor('org.freedesktop.portal.Flatpak.UpdateMonitor'));
-      return p;
-    }
-  }
-  Portal.configureMembers({ methods: { CreateUpdateMonitor: { inSignature: 'a{sv}', outSignature: 'o' } } });
-  await bus.requestName('org.freedesktop.portal.Flatpak');
-  bus.export('/org/freedesktop/portal/Flatpak', new Portal('org.freedesktop.portal.Flatpak'));
-  try { await fn(addr, calls); }
-  finally { bus.disconnect(); daemon.kill(); fs.rmSync(dir, { recursive: true, force: true }); }
+  let bus;
+  try {
+    const addr = await new Promise(r => daemon.stdout.once('data', d => r(d.toString().trim())));
+    // Nachgebautes Portal mit dem eigenen D-Bus-Client (src/dbus.js): Methodenaufrufe selbst beantworten.
+    bus = await Bus.connect(addr);
+    const calls = [];
+    const send = m => bus.sock.write(encodeMessage({ serial: ++bus.serial, ...m }));
+    const reply = (msg, sig = '', body = []) => send({ type: T.RETURN, replySerial: msg.serial, dest: msg.sender, sig, body });
+    const handle = msg => {
+      if (msg.member === 'CreateUpdateMonitor') { calls.push('Create'); reply(msg, 'o', [MONITOR]); }
+      else if (msg.member === 'Update') {
+        calls.push('Update'); reply(msg);
+        setTimeout(() => {
+          for (const ev of behaviour) send({ type: T.SIGNAL, path: MONITOR, iface: 'org.freedesktop.portal.Flatpak.UpdateMonitor', member: 'Progress', sig: 'a{sv}',
+            body: [Object.fromEntries(Object.entries(ev).map(([k, v]) => [k, [typeof v === 'string' ? 's' : 'u', v]]))] });
+        }, 50);
+      } else if (msg.member === 'Close') { calls.push('Close'); reply(msg); }
+    };
+    let buf = Buffer.alloc(0);
+    bus.sock.on('data', d => {
+      buf = Buffer.concat([buf, d]);
+      let m;
+      while ((m = decodeMessage(buf))) { buf = buf.subarray(m.size); if (m.msg.type === T.CALL) handle(m.msg); }
+    });
+    await bus.call({ dest: 'org.freedesktop.DBus', path: '/org/freedesktop/DBus', iface: 'org.freedesktop.DBus', member: 'RequestName', sig: 'su', body: ['org.freedesktop.portal.Flatpak', 0] });
+    await fn(addr, calls);
+  } finally { bus?.close(); daemon.kill(); fs.rmSync(dir, { recursive: true, force: true }); }
 }
+const MONITOR = '/org/freedesktop/portal/Flatpak/update_monitor/1/0';
 
 test('Flatpak-Update über das Portal: erfolgreich', { skip: !haveDaemon && 'dbus-daemon fehlt' }, async () => {
   await withPortal([{ status: 0, progress: 10 }, { status: 0, progress: 60 }, { status: 2, progress: 100 }], async (addr, calls) => {

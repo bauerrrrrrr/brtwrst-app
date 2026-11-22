@@ -18,6 +18,11 @@ Stand: 2026-11-22 (0.1.8).
 - `electron` 44 → 45 und Flatpak-Runtime/BaseApp 25.08 → 26.08 (`flatpak/pw.wurst.brat.Brtwrst.yml`): mit dem
   nächsten Release anheben (Release-Checkliste, Schritt 2).
 
+## Veraltete Unterpakete (npm warn deprecated, Stand 2026-11-22)
+- `glob@7`/`inflight` (über `@electron/asar`), `rimraf@2` (über `electron-winstaller` → `temp`), `boolean`
+  (über `@electron/get` → `global-agent`). Kommen aus `electron`/`electron-builder` in der neuesten Version; nur
+  Build-Zeit, nicht in der App. Lösbar erst durch neue Versionen dort (bei jedem Release mit prüfen).
+
 ## Offene Fragen
 - **403 durch Rate-Limit des Hosters?** Während eines CS2-Matches (2026-11-21) wurde die eigene IP für
   brat.wurst.pw gesperrt (nginx: „access forbidden by rule“). Vermutete Ursache: GSI-POSTs der von

@@ -11,7 +11,8 @@ Die App hat keine eigene Oberfläche, Login oder Daten – alles kommt von der W
 ## Tech-Stack
 - Electron 44, Node 26 (CI), CommonJS, keine Laufzeit-Abhängigkeiten (`dependencies` leer)
 - electron-builder: AppImage, NSIS, dmg/zip (arm64); Flatpak per `flatpak-builder` aus dem Linux-Build
-- Tests: `node:test` mit simuliertem CS2-Server (`test/fake-server.js`); `dbus-next` nur in Tests
+- Tests: `node:test` mit simuliertem CS2-Server (`test/fake-server.js`) und nachgebautem Flatpak-Portal über den
+  eigenen D-Bus-Client (`test/flatpak.test.js`, braucht `dbus-daemon`); keine Test-Abhängigkeiten außer Electron-Werkzeugen
 - CI: GitHub Actions (`.github/workflows/release.yml`, `flatpak-check.yml`)
 
 ## Befehle
@@ -65,8 +66,9 @@ npm run dist:linux | dist:win | dist:mac      # Pakete nach dist/
 ## Release (nur auf ausdrückliche Anweisung, z. B. „Release 0.1.8“)
 Ein Push auf `main` mit neuer Version erreicht über Auto-Updates alle Nutzer. Ohne Anweisung die Version nicht erhöhen.
 1. **Letzten Release-Lauf auswerten:** Annotations (Warnungen, Notices, Fehler) des letzten Laufs von `release.yml`
-   und `flatpak-check.yml` lesen (GitHub-Tools, `actions_list`/`get_job_logs`), Ursachen beheben oder im Bericht
-   begründen, warum nicht (z. B. reine Info von GitHub).
+   und `flatpak-check.yml` lesen und die Job-Logs nach `warn`/`deprecated` durchsuchen (GitHub-Tools,
+   `actions_list`/`get_job_logs`). Ursachen beheben oder im Bericht begründen, warum nicht (z. B. reine Info von
+   GitHub, Altlast in einem Fremdpaket, das schon aktuell ist; siehe `docs/open-points.md`).
 2. **Auf neueste stabile Versionen gehen**, nicht auf die Mindestversion, die eine Warnung beseitigt.
    `npm run versions` listet alles, was in `package.json`, in den `uses:`/`node-version`-Zeilen der Workflows und
    in `flatpak/*.yml` steht, **und die Website** (`../teambratwurst`: Leaflet, PHP auf dem Server; dort Abschnitt
