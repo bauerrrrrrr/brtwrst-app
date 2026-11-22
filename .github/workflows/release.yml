@@ -92,10 +92,6 @@ jobs:
     permissions:
       contents: read
       pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
@@ -124,11 +120,24 @@ jobs:
         run: scripts/flatpak-build.sh "${TAG#v}" site "$GPG_ID" "${{ steps.pages.outputs.base_url }}/"
       - uses: actions/upload-pages-artifact@v5
         with: { path: site }
+
+  # Veröffentlichen in eigenem Job (Muster aus der Pages-Doku): im selben Job fand deploy-pages das eben
+  # hochgeladene Artefakt nicht immer (0.2.0: „No artifacts named github-pages“).
+  pages:
+    needs: flatpak
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
       - id: deploy
         uses: actions/deploy-pages@v5
 
   release:
-    needs: [version, build, flatpak]
+    needs: [version, build, pages]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

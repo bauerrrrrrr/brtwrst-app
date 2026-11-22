@@ -47,7 +47,8 @@ Keine eigene Datenhaltung außer `<userData>/fenster.json`, `<userData>/update.l
 
 ## Release (`.github/workflows/release.yml`)
 Push auf `main` (oder Tag `v*.*.*`, der zu `package.json` passen muss) → `version` (neuer Tag?) → `test` → `build` (Linux/Windows/macOS-Matrix,
-ohne Code-Signatur) → `flatpak` (bauen, GPG-signieren, GitHub Pages) → `release` (`scripts/manifest.js`
+ohne Code-Signatur) → `flatpak` (bauen, GPG-signieren, Pages-Artefakt) → `pages`
+(GitHub Pages veröffentlichen, eigener Job) → `release` (`scripts/manifest.js`
 signiert das Manifest, `gh release create`; existiert das Release schon, nur `upload`/`edit`). Das Flatpak-Repo ist aktualisiert, bevor das Manifest erscheint.
 `flatpak-check.yml` baut/installiert das Flatpak bei Änderungen an `flatpak/`, `scripts/flatpak-build.sh`, `package.json` (also praktisch bei jedem Release-Commit) oder am Workflow selbst testweise, ohne Veröffentlichung.
 
