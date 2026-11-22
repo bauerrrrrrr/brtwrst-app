@@ -9,7 +9,7 @@ Die App ist ein Rahmen um die Website <https://brat.wurst.pw/lan/>. Inhalte, Log
 
 ## Sicherheit
 
-- **Nur eigene Seiten:** Die Schnittstelle `window.brtwrst` gibt es nur auf `https://lan.brat.wurst.pw/` und `https://brat.wurst.pw/lan/`. Der Hauptprozess prüft die Herkunft jedes Aufrufs zusätzlich selbst.
+- **Nur eigene Seiten:** Die Schnittstelle `window.brtwrst` gibt es nur auf `https://brat.wurst.pw/lan/`. Der Hauptprozess prüft die Herkunft jedes Aufrufs zusätzlich selbst.
 - **Nur LAN:** RCON und Scan gehen nur an private Adressen (10/8, 172.16/12, 192.168/16, 127/8) im Format `IP:Port`.
 - **Saubere Befehle:** Sie werden als Text übergeben, ohne Zeilenumbrüche, höchstens 200 pro Aufruf.
 - **Fremde Links:** Sie öffnen sich im System-Browser, nicht im App-Fenster.

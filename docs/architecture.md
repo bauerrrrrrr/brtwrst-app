@@ -29,7 +29,8 @@ flowchart LR
 - **Scan** (`src/scan.js`): A2S_INFO an alle Server parallel (3 s, Challenge-Antwort), danach `maps *` per RCON
   an bis zu 3 Server (Passwort = Hausnummer aus dem Servernamen). `a2sPlayers` für A2S_PLAYER (1,5 s).
 - **GSI** (`src/gsi.js`): Steam-Pfade (Windows-Registry + Standardpfade; Linux nativ, Flatpak-Steam, Snap),
-  `libraryfolders.vdf`, schreibt `gamestate_integration_brtwrst.cfg` in jeden gefundenen CS2-cfg-Ordner.
+  `libraryfolders.vdf`, schreibt `gamestate_integration_brtwrst.cfg` in jeden gefundenen CS2-cfg-Ordner. Den Inhalt
+  liefert die Website; `validGsiCfg` (`src/guard.js`) prüft Format, Schlüssel und Ziel.
 - **Berechtigungen**: nur `clipboard-sanitized-write` für eigene Seiten (`permissions()` in `src/main.js`).
 
 ## Datenhaltung
@@ -54,3 +55,7 @@ signiert das Manifest, `gh release create`; existiert das Release schon, nur `up
 - macOS nur Apple Silicon (Commit `eb8724c`), Intel bewusst nicht.
 - Startadresse `brat.wurst.pw/lan/` statt `lan.brat.wurst.pw` (Commit `43d2fe7`; Subdomain ohne HTTPS, nur geplant).
 - Kein Code-Signing-Zertifikat: Windows/macOS warnen beim ersten Start (Release-Notizen im Workflow).
+- Unterschiedliche IDs sind gewollt bzw. festgeschrieben: electron-builder `appId` `pw.wurst.brat.brtwrst` (`package.json`;
+  Windows-Installer/Taskleiste, macOS-Bundle-ID; ändern hieße Neuinstallation neben der alten), Flatpak
+  `pw.wurst.brat.Brtwrst` (`flatpak/`; Starter- und Metainfo-Datei müssen so heißen, `CHROME_DESKTOP` in
+  `flatpak/brtwrst.sh` verknüpft das Fenster), `desktopName` `brtwrst.desktop` für AppImage.

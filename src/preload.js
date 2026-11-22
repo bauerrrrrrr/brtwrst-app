@@ -14,7 +14,7 @@ if (own) {
     scan: list => ipcRenderer.invoke('brtwrst:scan', { list }),
     /** Spielerliste per Server-Abfrage (A2S_PLAYER): Name, Score (meist Kills), Dauer → { ok, players } */
     players: addr => ipcRenderer.invoke('brtwrst:players', { addr }),
-    /** GSI-Datei in alle gefundenen CS2-cfg-Ordner legen → { ok, paths } */
-    installGsi: token => ipcRenderer.invoke('brtwrst:gsi-install', { token }),
+    /** GSI-Datei (Inhalt von der Website) in alle gefundenen CS2-cfg-Ordner legen → { ok, paths } */
+    installGsi: (token, cfg) => ipcRenderer.invoke('brtwrst:gsi-install', { token, cfg }),
   });
 }

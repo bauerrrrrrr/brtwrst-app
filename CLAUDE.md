@@ -36,7 +36,7 @@ npm run dist:linux | dist:win | dist:mac      # Pakete nach dist/
 | `src/preload.js` | `window.brtwrst` (nur auf eigenen Seiten) |
 | `src/guard.js` | `START_URL`, erlaubte Origins (`isOwn`), LAN-Adressen, Befehlsprüfung |
 | `src/rcon.js` / `src/scan.js` | Source-RCON-Client / A2S_INFO-Scan, Mappool, A2S_PLAYER |
-| `src/gsi.js` | GSI-cfg bauen und in CS2-cfg-Ordner aller Steam-Bibliotheken schreiben |
+| `src/gsi.js` | GSI-cfg (Inhalt von der Website) in CS2-cfg-Ordner aller Steam-Bibliotheken schreiben |
 | `src/updater.js`, `src/update-key.js` | Signierte Updates (Manifest + Ed25519), Tausch je Plattform |
 | `src/flatpak.js`, `src/dbus.js` | Flatpak-Update über das Portal, eigener D-Bus-Client |
 | `src/offline.html` | Fehlerseite, wenn die Website nicht lädt |
@@ -53,12 +53,13 @@ npm run dist:linux | dist:win | dist:mac      # Pakete nach dist/
   die Website nutzt sie nur per Feature-Detection.
 
 ## Stolperfallen
-- `src/gsi.js` muss dieselbe cfg erzeugen wie `teambratwurst/app/pages/gsi.php` (doppelt gepflegt).
+- Die GSI-cfg baut nur die Website (`teambratwurst/app/pages/gsi.php`); `validGsiCfg` in `src/guard.js` muss deren
+  Format zulassen (Kopf, VDF-Zeilen, Ziel nur eigene Seite oder LAN-IPv4).
 - `src/update-key.js` enthält den öffentlichen Schlüssel; ein neuer Schlüssel heißt: alle installieren einmal von Hand.
 - AppImage startet mit `--no-sandbox` (`src/main.js`); Fenster bleiben über `contextIsolation`/`sandbox` isoliert.
 - macOS-Builds sind nur ad-hoc signiert, nicht notarisiert; Windows unsigniert.
-- `lan.brat.wurst.pw` in `src/guard.js` ist nur geplant (kein HTTPS).
-- Festgelegte Mindestversion für die Website-Integration: 0.1.7 (nicht im Code erzwungen).
+- `lan.brat.wurst.pw` ist bewusst nicht in `ALLOWED` (`src/guard.js`), solange die Subdomain kein HTTPS hat.
+- Festgelegte Mindestversion für die Website-Integration: 0.1.7 (die Website zeigt älteren Apps nur einen Hinweis, `teambratwurst/assets/app.js`).
 
 ## Release (nur auf ausdrückliche Anweisung, z. B. „Release 0.1.8“)
 Ein Push auf `main` mit neuer Version erreicht über Auto-Updates alle Nutzer. Ohne Anweisung die Version nicht erhöhen.

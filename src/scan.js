@@ -65,7 +65,7 @@ function a2sPlayers(addr, { wait = 1500 } = {}) {
   });
 }
 
-const MAP_RE = /^(de|cs|ar|dz|gd)_[a-z0-9_]+$/;
+const MAP_RE = /^(de|cs|ar|dz|gd)_[a-z0-9_]{1,60}$/;   // wie die Website (app/pages/rcon.php, rcon_names)
 
 /** Mappool aus der Ausgabe von „maps *“: eine Map pro Zeile, ohne Skyboxen, _vanity und Editor-Szenen. */
 function parseMaps(out) {

@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const rcon = require('../src/rcon');
 const { scan, parseMaps } = require('../src/scan');
-const { isOwn, isLanAddr, validCmds } = require('../src/guard');
+const { isOwn, isLanAddr, validCmds, isGsiTarget, validGsiCfg } = require('../src/guard');
 const { rconServer, a2sServer } = require('./fake-server');
 
 const MAPS = ['ar_baggage', 'cs_italy', 'de_dust2', 'de_fachwerk', 'de_mirage', 'de_dust2_vanity', 'maps/editor/x', 'de_dust2_skybox'];
@@ -65,6 +65,7 @@ test('RCON: Verbindung abgelehnt', async () => {
 
 test('Mappool aus „maps *“', () => {
   assert.deepEqual(parseMaps(MAPS.map(m => '  ' + m).join('\n')), ['ar_baggage', 'cs_italy', 'de_dust2', 'de_fachwerk', 'de_mirage']);
+  assert.deepEqual(parseMaps(`de_${'x'.repeat(60)}\nde_${'x'.repeat(61)}`), [`de_${'x'.repeat(60)}`]);   // wie die Website: höchstens 60 Zeichen
 });
 
 test('Scan: Namen per A2S, Mappool per RCON vom ersten Server', async () => {
@@ -90,7 +91,7 @@ test('A2S_PLAYER: Namen und Kills mit Challenge', async () => {
 });
 
 test('Absicherung: Domain, LAN-Adressen, Befehle', () => {
-  assert.equal(isOwn('https://lan.brat.wurst.pw/index.php?p=rcon'), true);
+  assert.equal(isOwn('https://lan.brat.wurst.pw/index.php?p=rcon'), false);
   assert.equal(isOwn('https://brat.wurst.pw/lan/index.php?p=rcon'), true);
   assert.equal(isOwn('https://brat.wurst.pw/'), false);
   assert.equal(isOwn('https://brat.wurst.pw/lanparty/'), false);
@@ -106,4 +107,22 @@ test('Absicherung: Domain, LAN-Adressen, Befehle', () => {
   assert.equal(validCmds(['say a\nquit']), false);
   assert.equal(validCmds([]), false);
   assert.equal(validCmds('changelevel de_dust2'), false);
+});
+
+// So baut die Website die Datei (app/pages/gsi.php, $gsiCfg)
+const cfgFor = (uri, token = 'geheim123') => `"BRTWRST Beamer"\n{\n  "uri"       "${uri}"\n  "timeout"   "5.0"\n  "buffer"    "0.1"\n  "throttle"  "0.25"\n  "heartbeat" "10.0"\n`
+  + `  "auth"\n  {\n    "token" "${token}"\n  }\n  "data"\n  {\n    "provider" "1"\n    "player_state" "1"\n  }\n}\n`;
+
+test('Absicherung: GSI-Datei von der Website', () => {
+  for (const u of ['https://brat.wurst.pw/lan/gsi.php', 'http://192.168.1.10/gsi.php', 'http://10.10.100.2:8080/gsi.php']) assert.equal(isGsiTarget(u), true, u);
+  for (const u of ['https://evil.example/gsi.php', 'https://brat.wurst.pw/gsi.php', 'http://brat.wurst.pw/lan/gsi.php', 'http://8.8.8.8/gsi.php', 'ftp://192.168.1.10/', 'http://a:b@192.168.1.10/', 'kaputt']) assert.equal(isGsiTarget(u), false, u);
+  assert.equal(validGsiCfg(cfgFor('https://brat.wurst.pw/lan/gsi.php'), 'geheim123'), true);
+  assert.equal(validGsiCfg(cfgFor('https://brat.wurst.pw/lan/gsi.php'), 'anderer1'), false, 'Schlüssel passt nicht');
+  assert.equal(validGsiCfg(cfgFor('https://evil.example/gsi.php'), 'geheim123'), false, 'fremdes Ziel');
+  assert.equal(validGsiCfg(cfgFor('https://brat.wurst.pw/lan/gsi.php').replace('"BRTWRST Beamer"', '"Anders"'), 'geheim123'), false, 'falscher Kopf');
+  assert.equal(validGsiCfg(cfgFor('https://brat.wurst.pw/lan/gsi.php') + 'exec autoexec\n', 'geheim123'), false, 'keine VDF-Zeile');
+  assert.equal(validGsiCfg(cfgFor('https://brat.wurst.pw/lan/gsi.php').replace('{\n', '{\n  "uri" "http://192.168.1.2/"\n'), 'geheim123'), false, 'zwei URIs');
+  assert.equal(validGsiCfg(cfgFor('https://brat.wurst.pw/lan/gsi.php').replace(/\n/g, '\r\n'), 'geheim123'), false, 'CRLF');
+  assert.equal(validGsiCfg('x'.repeat(5000), 'geheim123'), false);
+  assert.equal(validGsiCfg(undefined, 'geheim123'), false);
 });

@@ -8,13 +8,15 @@ APP=pw.wurst.brat.Brtwrst
 cd "$(dirname "$0")/.."
 mkdir -p "$OUT"
 
-sed -e "s/@VERSION@/$V/" -e "s/@DATE@/$(date -u +%F)/" flatpak/$APP.metainfo.xml > flatpak/.metainfo.tmp
-mv flatpak/.metainfo.tmp flatpak/$APP.metainfo.xml
+# Version/Datum nur in eine Arbeitskopie schreiben; flatpak/ bleibt unverändert (gleiche Tiefe → ../dist, ../build passen).
+SRC=.flatpak-src
+rm -rf "$SRC" && cp -a flatpak "$SRC"
+sed -i -e "s/@VERSION@/$V/" -e "s/@DATE@/$(date -u +%F)/" "$SRC/$APP.metainfo.xml"
 
 SIGN=()
 [ -n "$GPG_ID" ] && SIGN=(--gpg-sign="$GPG_ID" --gpg-homedir="$GNUPGHOME")
 flatpak-builder --user --install-deps-from=flathub --disable-rofiles-fuse --force-clean \
-  --default-branch=stable --repo="$OUT/repo" "${SIGN[@]}" .flatpak-build flatpak/$APP.yml
+  --default-branch=stable --repo="$OUT/repo" "${SIGN[@]}" .flatpak-build "$SRC/$APP.yml"
 flatpak build-update-repo --prune --title="BRTWRST" "${SIGN[@]}" "$OUT/repo"
 
 [ -n "$GPG_ID" ] || exit 0

@@ -3,3 +3,4 @@ dist/
 *.log
 .flatpak-build/
 .flatpak-builder/
+.flatpak-src/

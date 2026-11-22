@@ -1,9 +1,8 @@
 // Wer darf was: nur Seiten von unserer Domain bekommen RCON und Scan, und die gehen nur an LAN-Adressen.
 'use strict';
 
-const START_URL = process.env.BRTWRST_URL || 'https://brat.wurst.pw/lan/';   // lan.brat.wurst.pw hat derzeit kein HTTPS
+const START_URL = process.env.BRTWRST_URL || 'https://brat.wurst.pw/lan/';
 const ALLOWED = [
-  { origin: 'https://lan.brat.wurst.pw', path: '/' },
   { origin: 'https://brat.wurst.pw', path: '/lan/' },
 ];
 // Zum Testen (BRTWRST_URL=http://127.0.0.1:…) gilt auch die Start-Adresse als eigene Seite.
@@ -24,10 +23,32 @@ function isLanAddr(addr) {
   return a === 10 || a === 127 || (a === 192 && b === 168) || (a === 172 && b >= 16 && b <= 31);
 }
 
+/** Ziel für CS2-GSI: http(s) zu unserer Website oder zu einer LAN-Adresse (z. B. Empfänger auf der LAN). */
+function isGsiTarget(uri) {
+  try {
+    const u = new URL(uri);
+    if (!/^https?:$/.test(u.protocol) || u.username || u.password) return false;
+    return isOwn(u.href) || isLanAddr(`${u.hostname}:${u.port || (u.protocol === 'https:' ? 443 : 80)}`);
+  } catch { return false; }
+}
+
+/**
+ * GSI-cfg von der Website: nur einfache VDF-Zeilen ("Schlüssel" bzw. "Schlüssel" "Wert", { und }),
+ * Kopf "BRTWRST Beamer", genau eine URI mit erlaubtem Ziel und der übergebene Schlüssel.
+ */
+function validGsiCfg(cfg, token) {
+  if (typeof cfg !== 'string' || !cfg || cfg.length > 4096 || /[\r\0]/.test(cfg)) return false;
+  const lines = cfg.split('\n').filter(l => l.trim());
+  if (lines[0] !== '"BRTWRST Beamer"') return false;
+  if (!lines.every(l => /^\s*(\{|\}|"[A-Za-z0-9_ ]{1,64}"(\s+"[^"\\]{0,512}")?)\s*$/.test(l))) return false;
+  const uris = [...cfg.matchAll(/^\s*"uri"\s+"([^"]*)"\s*$/gm)].map(m => m[1]);
+  return uris.length === 1 && isGsiTarget(uris[0]) && cfg.includes(`"token" "${token}"`);
+}
+
 /** Befehle: Liste aus Text, ohne Zeilenumbrüche, in vernünftiger Länge. */
 function validCmds(cmds) {
   return Array.isArray(cmds) && cmds.length >= 1 && cmds.length <= 200 &&
     cmds.every(c => typeof c === 'string' && c.length >= 1 && c.length <= 512 && !/[\r\n\0]/.test(c));
 }
 
-module.exports = { START_URL, isOwn, isLanAddr, validCmds };
+module.exports = { START_URL, isOwn, isLanAddr, isGsiTarget, validCmds, validGsiCfg };

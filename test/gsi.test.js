@@ -11,16 +11,14 @@ test('GSI: Datei in alle CS2-Bibliotheken (Hauptordner + libraryfolders.vdf)', (
   fs.mkdirSync(path.join(main, 'steamapps'), { recursive: true });
   fs.mkdirSync(cs(extra), { recursive: true });
   fs.writeFileSync(path.join(main, 'steamapps', 'libraryfolders.vdf'), `"libraryfolders"\n{\n\t"0"\n\t{\n\t\t"path"\t\t"${main}"\n\t}\n\t"1"\n\t{\n\t\t"path"\t\t"${extra}"\n\t}\n}\n`);
-  const r = gsi.install('https://lan.brat.wurst.pw/gsi.php', 'geheim123', [main, path.join(t, 'gibtsnicht')]);
+  const cfg = '"BRTWRST Beamer"\n{\n  "uri" "https://brat.wurst.pw/lan/gsi.php"\n}\n';
+  const r = gsi.install(cfg, [main, path.join(t, 'gibtsnicht')]);
   assert.equal(r.ok, true, r.error);
   assert.deepEqual(r.paths, [path.join(fs.realpathSync(cs(extra)), gsi.FILE)]);
-  const c = fs.readFileSync(r.paths[0], 'utf8');
-  assert.match(c, /"uri"\s+"https:\/\/lan\.brat\.wurst\.pw\/gsi\.php"/);
-  assert.match(c, /"token" "geheim123"/);
-  assert.match(c, /"player_state" "1"/);
+  assert.equal(fs.readFileSync(r.paths[0], 'utf8'), cfg, 'Inhalt unverändert von der Website');
 });
 
 test('GSI: kein CS2 gefunden', () => {
-  const r = gsi.install('https://x/gsi.php', 'geheim123', [path.join(os.tmpdir(), 'nichts-' + Date.now())]);
+  const r = gsi.install('"BRTWRST Beamer"\n', [path.join(os.tmpdir(), 'nichts-' + Date.now())]);
   assert.equal(r.ok, false); assert.match(r.error, /nicht gefunden/);
 });

@@ -4,7 +4,7 @@ const { app, BrowserWindow, ipcMain, shell, Menu, session, dialog } = require('e
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-const { START_URL, isOwn, isLanAddr, validCmds } = require('./guard');
+const { START_URL, isOwn, isLanAddr, validCmds, validGsiCfg } = require('./guard');
 const rcon = require('./rcon');
 const { scan, a2sPlayers } = require('./scan');
 const updater = require('./updater');
@@ -84,11 +84,12 @@ ipcMain.handle('brtwrst:players', async (e, { addr } = {}) => {
   if (!isLanAddr(addr)) return { ok: false, players: [], error: 'Nur LAN-Adressen erlaubt' };
   return a2sPlayers(addr);
 });
-ipcMain.handle('brtwrst:gsi-install', async (e, { token } = {}) => {
+ipcMain.handle('brtwrst:gsi-install', async (e, { token, cfg } = {}) => {
   if (!fromOwn(e)) return { ok: false, error: 'Nicht erlaubt' };
   if (typeof token !== 'string' || !/^[A-Za-z0-9._~-]{8,200}$/.test(token)) return { ok: false, error: 'Ungültiger Schlüssel' };
-  const u = new URL('gsi.php', e.senderFrame.url); u.search = ''; u.hash = '';
-  return gsi.install(u.href, token);
+  if (cfg === undefined) return { ok: false, error: 'Die Seite ist veraltet. Bitte neu laden (Strg+R) oder die Datei herunterladen.' };
+  if (!validGsiCfg(cfg, token)) return { ok: false, error: 'Ungültige GSI-Datei' };
+  return gsi.install(cfg);
 });
 
 // ---------- Updates (signiert, über GitHub Releases) ----------
