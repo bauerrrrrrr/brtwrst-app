@@ -78,5 +78,8 @@
     "electron": "^45.4.1",
     "electron-builder": "^26.18.0"
   },
-  "desktopName": "brtwrst.desktop"
+  "desktopName": "brtwrst.desktop",
+  "allowScripts": {
+    "electron-winstaller": false
+  }
 }

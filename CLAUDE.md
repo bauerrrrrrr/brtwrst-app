@@ -61,13 +61,15 @@ npm run dist:linux | dist:win | dist:mac      # Pakete nach dist/
 - AppImage startet mit `--no-sandbox` (`src/main.js`); Fenster bleiben über `contextIsolation`/`sandbox` isoliert.
 - macOS-Builds sind nur ad-hoc signiert, nicht notarisiert; Windows unsigniert.
 - `lan.brat.wurst.pw` ist bewusst nicht in `ALLOWED` (`src/guard.js`), solange die Subdomain kein HTTPS hat.
+- Install-Skripte von Abhängigkeiten regelt `allowScripts` in `package.json` (npm ≥ 11.20; `npm approve-scripts` /
+  `npm deny-scripts`). `electron-winstaller` ist gesperrt: nur für das Squirrel-Ziel nötig, gebaut wird NSIS.
 - Festgelegte Mindestversion für die Website-Integration: 0.1.7 (die Website zeigt älteren Apps nur einen Hinweis, `teambratwurst/assets/app.js`).
 
 ## Release (nur auf ausdrückliche Anweisung, z. B. „Release 0.1.8“)
 Ein Push auf `main` mit neuer Version erreicht über Auto-Updates alle Nutzer. Ohne Anweisung die Version nicht erhöhen.
 1. **Letzten Release-Lauf auswerten:** Annotations (Warnungen, Notices, Fehler) des letzten Laufs von `release.yml`
-   und `flatpak-check.yml` lesen und die Job-Logs nach `warn`/`deprecated` durchsuchen (GitHub-Tools,
-   `actions_list`/`get_job_logs`). Ursachen beheben oder im Bericht begründen, warum nicht (z. B. reine Info von
+   und `flatpak-check.yml` lesen und die Job-Logs aller Jobs nach `warn`/`deprecated`/`Deprecation`/`vulnerabilit`
+   durchsuchen (GitHub-Tools, `actions_list`/`get_job_logs`); dazu `npm audit`. Ursachen beheben oder im Bericht begründen, warum nicht (z. B. reine Info von
    GitHub, Altlast in einem Fremdpaket, das schon aktuell ist; siehe `docs/open-points.md`).
 2. **Auf neueste stabile Versionen gehen**, nicht auf die Mindestversion, die eine Warnung beseitigt.
    `npm run versions` listet alles, was in `package.json`, in den `uses:`/`node-version`-Zeilen der Workflows und

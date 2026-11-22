@@ -18,6 +18,11 @@ Stand: 2026-11-22 (0.1.9).
 - `glob@7`/`inflight` (über `@electron/asar`), `rimraf@2` (über `electron-winstaller` → `temp`), `boolean`
   (über `@electron/get` → `global-agent`). Kommen aus `electron`/`electron-builder` in der neuesten Version; nur
   Build-Zeit, nicht in der App. Lösbar erst durch neue Versionen dort (bei jedem Release mit prüfen).
+- `npm audit`: 6 × „moderate“, alle über `minimatch` 9/10 (ReDoS, GHSA-g3hv-75wg-m249, behoben erst in 11) in
+  `app-builder-lib` und `@electron/universal`. Nur Build-Zeit mit eigenen Mustern; `npm audit fix` würde
+  `electron-builder` auf 24 zurückstufen, daher nicht angewendet.
+- Node-Deprecation-Warnungen aus GitHub-Actions selbst (neueste Versionen): `DEP0005 Buffer()` aus
+  `actions/download-artifact@v8`, `DEP0040 punycode` im Flatpak-Job (Pages-Actions). Nicht unser Code.
 
 ## Offene Fragen
 - **403 durch Rate-Limit des Hosters?** Während eines CS2-Matches (2026-11-21) wurde die eigene IP für
