@@ -24,7 +24,7 @@ CS2-Servern im LAN, GitHub (Updates) und dem lokalen Dateisystem (GSI-Datei).
 ## API `window.brtwrst`
 | Member | Signatur → Antwort | Nutzung in der Website |
 |---|---|---|
-| `version` | String, z. B. `"0.2.0"` | `assets/app.js` (Zeile „BRTWRST-App x.y.z“ unten in der Seitenleiste, Hinweis bei zu alter App), `assets/rcon-exec.js` (Anzeige) |
+| `version` | String, z. B. `"0.2.0"` | `assets/app.js` (Link „BRTWRST-App x.y.z“ unten in der Seitenleiste öffnet „Was ist neu“ und markiert mit `?seit=` Neueres; Hinweis bei zu alter App), `assets/rcon-exec.js` (Anzeige) |
 | `platform` | `process.platform` (`win32`, `darwin`, `linux`) | `app/pages/gsi.php` (macOS-Hinweis) |
 | `rcon(addr, pass, cmds)` | → `{ ok, results: [{cmd, out}], error? }`; bei Abbruch ist `results` ggf. teilweise gefüllt | `assets/rcon-exec.js` (Befehle, Config-Prüfung, `status`, `listid`, Kick/Unban) |
 | `scan(list)` | `list = [[id, "ip:port"], …]` → `{ names: {id: name}, maps: [...], error? }` | `assets/rcon-exec.js` („Server laden“) |
@@ -70,6 +70,8 @@ CS2-Servern im LAN, GitHub (Updates) und dem lokalen Dateisystem (GSI-Datei).
 - Festgelegte Mindestversion (Entscheidung Betreiber, 2026-11): **0.1.7** (Auto-Update geht ab 0.1.5).
   Bei gravierenden Schnittstellenänderungen wird sie angehoben. Ist `window.brtwrst.version` älter, zeigt
   `assets/app.js` (`MIN`) auf jeder Seite einen Hinweis zum Aktualisieren; gesperrt wird nichts.
+- „Was ist neu“ (`data/changelog.md`) ist nach App-Versionen gegliedert; Website-Änderungen stehen unter
+  „Seit App-Version X.Y.Z“, bis das nächste App-Release den Abschnitt abschließt (Regeln: `CLAUDE.md` beider Repos).
 - Neue Bridge-Funktionen: zuerst in der App veröffentlichen, auf der Website nur mit Feature-Detection nutzen
   und einen Hinweis „bitte aktualisieren“ zeigen (Muster: `app/pages/gsi.php`).
 - Download-Links der Website zeigen auf `github.com/bauerrrrrrr/brtwrst-app/releases/latest` und

@@ -78,8 +78,12 @@ Ein Push auf `main` mit neuer Version erreicht über Auto-Updates alle Nutzer. O
    im Bericht begründen. Kommt eine neue Art Komponente dazu (z. B. andere Paketquelle), `scripts/versions.js` erweitern.
 3. `npm test` grün (der Hook `.claude/settings.json` prüft zusätzlich jede geänderte `.js`-Datei mit `node --check`).
 4. Schnittstelle geändert? `docs/integration.md` hier und in teambratwurst aktuell, ggf. Mindestversion eintragen.
-5. `npm version X.Y.Z --no-git-tag-version`; Commit-Betreff `BRTWRST X.Y.Z: <was neu ist>` (wird zum Update-Text).
-6. Push auf `main`; im Abschlussbericht Version, Betreff, ausgewertete Annotations, Versionssprünge und
+5. „Was ist neu“ in `teambratwurst/data/changelog.md`: was das Team von diesem Release merkt unter
+   `## Seit App-Version …` ergänzen (nur Nutzersicht, keine Technik; Regeln in `teambratwurst/CLAUDE.md`), den
+   Abschnitt in `## App-Version X.Y.Z (TT.MM.JJJJ)` umbenennen und auf teambratwurst `main` pushen. Ohne Punkte
+   für das Team: nichts eintragen, der Abschnitt bleibt offen und heißt dann `## Seit App-Version X.Y.Z`.
+6. `npm version X.Y.Z --no-git-tag-version`; Commit-Betreff `BRTWRST X.Y.Z: <was neu ist>` (wird zum Update-Text).
+7. Push auf `main`; im Abschlussbericht Version, Betreff, ausgewertete Annotations, Versionssprünge und
    aktualisierte Doku-Dateien nennen.
 
 ## Doku-Pflege
