@@ -9,7 +9,7 @@ Die App hat keine eigene Oberfläche, Login oder Daten – alles kommt von der W
 (Kopie; Quelle der Wahrheit ist `teambratwurst/docs/integration.md`).
 
 ## Tech-Stack
-- Electron 44, Node 22 (CI), CommonJS, keine Laufzeit-Abhängigkeiten (`dependencies` leer)
+- Electron 44, Node 26 (CI), CommonJS, keine Laufzeit-Abhängigkeiten (`dependencies` leer)
 - electron-builder: AppImage, NSIS, dmg/zip (arm64); Flatpak per `flatpak-builder` aus dem Linux-Build
 - Tests: `node:test` mit simuliertem CS2-Server (`test/fake-server.js`); `dbus-next` nur in Tests
 - CI: GitHub Actions (`.github/workflows/release.yml`, `flatpak-check.yml`)
@@ -63,10 +63,18 @@ npm run dist:linux | dist:win | dist:mac      # Pakete nach dist/
 
 ## Release (nur auf ausdrückliche Anweisung, z. B. „Release 0.1.8“)
 Ein Push auf `main` mit neuer Version erreicht über Auto-Updates alle Nutzer. Ohne Anweisung die Version nicht erhöhen.
-1. `npm test` grün (der Hook `.claude/settings.json` prüft zusätzlich jede geänderte `.js`-Datei mit `node --check`).
-2. Schnittstelle geändert? `docs/integration.md` hier und in teambratwurst aktuell, ggf. Mindestversion eintragen.
-3. `npm version X.Y.Z --no-git-tag-version`; Commit-Betreff `BRTWRST X.Y.Z: <was neu ist>` (wird zum Update-Text).
-4. Push auf `main`; im Abschlussbericht Version, Betreff und aktualisierte Doku-Dateien nennen.
+1. **Letzten Release-Lauf auswerten:** Annotations (Warnungen, Notices, Fehler) des letzten Laufs von `release.yml`
+   und `flatpak-check.yml` lesen (GitHub-Tools, `actions_list`/`get_job_logs`), Ursachen beheben oder im Bericht
+   begründen, warum nicht (z. B. reine Info von GitHub).
+2. **Auf neueste stabile Versionen gehen**, nicht auf die Mindestversion, die eine Warnung beseitigt:
+   GitHub-Actions (höchste Hauptversion ohne Vorabversion, Breaking Changes in deren README prüfen), Node in der CI
+   (neueste LTS), `electron`, `electron-builder`, `dbus-next`, Flatpak-Runtime/BaseApp (`flatpak/*.yml`).
+   Ausnahmen nur mit Begründung im Bericht.
+3. `npm test` grün (der Hook `.claude/settings.json` prüft zusätzlich jede geänderte `.js`-Datei mit `node --check`).
+4. Schnittstelle geändert? `docs/integration.md` hier und in teambratwurst aktuell, ggf. Mindestversion eintragen.
+5. `npm version X.Y.Z --no-git-tag-version`; Commit-Betreff `BRTWRST X.Y.Z: <was neu ist>` (wird zum Update-Text).
+6. Push auf `main`; im Abschlussbericht Version, Betreff, ausgewertete Annotations, Versionssprünge und
+   aktualisierte Doku-Dateien nennen.
 
 ## Doku-Pflege
 - Nur tatsächlich betroffene Doku-Stellen aktualisieren; keine unnötigen Umschreibungen oder Wiederholungen.
