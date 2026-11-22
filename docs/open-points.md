@@ -1,6 +1,6 @@
 # Offene Punkte – brtwrst-app
 
-Stand: 2026-11-22 (0.2.1).
+Stand: 2026-11-22 (0.2.2).
 
 ## Inkonsistenzen Website ↔ App
 - **Installationen bis 0.1.7** bauen die GSI-cfg noch selbst (ohne `gsi_url` der Website); ab 0.1.8 kommt sie von
@@ -12,8 +12,6 @@ Stand: 2026-11-22 (0.2.1).
 - GSI-Installation unter macOS bewusst abgelehnt; Flatpak darf nur in Steam-Ordner im Home schreiben
   (CS2 auf anderer Platte → Datei manuell von der Website).
 - Bridge nur IPv4 und private Netze; `scan` höchstens 256 Server, `rcon` höchstens 200 Befehle.
-- Steam-Anmeldung im Fenster (`isSteamLogin`, `src/guard.js`) ohne echten Steam-Login getestet: ob Steam dabei
-  weitere Seiten ansteuert (QR-Code, Steam Guard), ist offen; solche Ziele gingen in den Browser und die Anmeldung bräche ab.
 - Verlust von `BRTWRST_SIGNING_KEY` erfordert manuelle Neuinstallation bei allen (`README.md`).
 
 ## Veraltete Unterpakete (npm warn deprecated, Stand 2026-11-22)

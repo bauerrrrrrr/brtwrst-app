@@ -1,6 +1,6 @@
 # Integration Website ↔ BRTWRST-App
 
-> Kopie, Quelle: teambratwurst (`docs/integration.md`), Stand: 2026-11-22, App 0.2.1.
+> Kopie, Quelle: teambratwurst (`docs/integration.md`), Stand: 2026-11-22, App 0.2.2.
 > Änderungen zuerst in teambratwurst vornehmen und hierher kopieren.
 
 **Quelle der Wahrheit:** diese Datei (`teambratwurst/docs/integration.md`).
@@ -20,17 +20,24 @@ CS2-Servern im LAN, GitHub (Updates) und dem lokalen Dateisystem (GSI-Datei).
   - mit `BRTWRST_URL` gesetzt zusätzlich deren Origin (lokales Testen)
 - Der Hauptprozess prüft bei jedem Aufruf erneut die Herkunft (`fromOwn`, `brtwrst-app/src/main.js`).
 - Fremde Links öffnen im System-Browser; Berechtigungen nur `clipboard-sanitized-write` für eigene Seiten.
-- Ausnahme ab 0.2.1: die Steam-Anmeldung (`isSteamLogin()`: `https://steamcommunity.com/openid/…` und `/login/…`,
-  `https://login.steampowered.com/…`) läuft im Hauptfenster, ohne `window.brtwrst` und ohne Berechtigungen;
-  Fenstertitel „Steam-Anmeldung · <Host> (Esc bricht ab)“, Esc lädt die Startseite. Steam leitet danach zur
-  eigenen Login-Seite zurück (`app/pages/login.php`, `?p=login&steam=back`).
+- Nur 0.2.1 zeigte die Steam-Anmeldung im Hauptfenster (`isSteamLogin()`); ab 0.2.2 wieder entfernt.
+
+## Login in der App (Steam im System-Browser)
+Keine Bridge-Funktion; die Website nutzt nur, dass die App fremde Adressen aus `window.open` im System-Browser
+öffnet (`setWindowOpenHandler` in `brtwrst-app/src/main.js`, alle Versionen). Ablauf (`app/pages/login.php`, `app/auth.php`):
+1. Login-Seite erkennt die App (`window.brtwrst`), Klick → POST `action=pair_start` (CSRF) legt `login_pairs` an
+   (5 min, Kennung in der App-Session) und liefert die Steam-Adresse; `return_to` enthält `pair` und den `state` des Vorgangs.
+2. `window.open(url)` → Browser: Steam-Anmeldung, Rückkehr `?p=login&steam=back&pair=…`, Prüfung wie im Browser-Login,
+   dann Frage „App-Anmeldung als … freigeben?“ (Warnung, wenn der Vorgang aus einer anderen IP gestartet wurde).
+3. Die App fragt alle 2 s `?p=login&pair_poll=1` (JSON `state`: `warten|ok|abgebrochen|abgelaufen`); bei `ok` ist die
+   App-Session angemeldet. Der Browser selbst bleibt dabei abgemeldet.
 
 ## API `window.brtwrst`
 | Member | Signatur → Antwort | Nutzung in der Website |
 |---|---|---|
 | `version` | String, z. B. `"0.2.0"` | `assets/app.js` (Link „BRTWRST-App x.y.z“ unten in der Seitenleiste öffnet „Was ist neu“ und markiert mit `?seit=` Neueres; Hinweis bei zu alter App), `assets/rcon-exec.js` (Anzeige) |
 | `platform` | `process.platform` (`win32`, `darwin`, `linux`) | `app/pages/gsi.php` (macOS-Hinweis) |
-| `steamLogin` | `true` (ab 0.2.1; fehlt bei älteren Apps) | `app/pages/login.php` (ohne: Steam-Knopf aus, Hinweis „App aktualisieren“ / persönlicher Link) |
+| `steamLogin` | `true` nur in 0.2.1 (ab 0.2.2 entfernt) | nicht mehr genutzt |
 | `rcon(addr, pass, cmds)` | → `{ ok, results: [{cmd, out}], error? }`; bei Abbruch ist `results` ggf. teilweise gefüllt | `assets/rcon-exec.js` (Befehle, Config-Prüfung, `status`, `listid`, Kick/Unban) |
 | `scan(list)` | `list = [[id, "ip:port"], …]` → `{ names: {id: name}, maps: [...], error? }` | `assets/rcon-exec.js` („Server laden“) |
 | `players(addr)` | → `{ ok, players: [{name, score, time}], error? }` (A2S_PLAYER, `score` meist Kills) | `assets/rcon-exec.js` (`sendSrv`: Kills gehen per `rcon_srv` an die Gegnerkacheln im Beamer) |
@@ -71,7 +78,7 @@ CS2-Servern im LAN, GitHub (Updates) und dem lokalen Dateisystem (GSI-Datei).
 
 ## Versionen und Kompatibilität
 - Die Website erkennt die App über die Existenz von `window.brtwrst` und prüft einzelne Funktionen
-  per Feature-Detection (`window.brtwrst.players`, `window.brtwrst?.installGsi`, `window.brtwrst.steamLogin`).
+  per Feature-Detection (`window.brtwrst.players`, `window.brtwrst?.installGsi`).
 - Festgelegte Mindestversion (Entscheidung Betreiber, 2026-11): **0.1.7** (Auto-Update geht ab 0.1.5).
   Bei gravierenden Schnittstellenänderungen wird sie angehoben. Ist `window.brtwrst.version` älter, zeigt
   `assets/app.js` (`MIN`) auf jeder Seite einen Hinweis zum Aktualisieren; gesperrt wird nichts.

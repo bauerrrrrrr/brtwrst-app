@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const rcon = require('../src/rcon');
 const { scan, parseMaps } = require('../src/scan');
-const { isOwn, isSteamLogin, isLanAddr, validCmds, isGsiTarget, validGsiCfg } = require('../src/guard');
+const { isOwn, isLanAddr, validCmds, isGsiTarget, validGsiCfg } = require('../src/guard');
 const { rconServer, a2sServer } = require('./fake-server');
 
 const MAPS = ['ar_baggage', 'cs_italy', 'de_dust2', 'de_fachwerk', 'de_mirage', 'de_dust2_vanity', 'maps/editor/x', 'de_dust2_skybox'];
@@ -113,19 +113,9 @@ test('Absicherung: Domain, LAN-Adressen, Befehle', () => {
 const cfgFor = (uri, token = 'geheim123') => `"BRTWRST Beamer"\n{\n  "uri"       "${uri}"\n  "timeout"   "5.0"\n  "buffer"    "0.1"\n  "throttle"  "0.25"\n  "heartbeat" "10.0"\n`
   + `  "auth"\n  {\n    "token" "${token}"\n  }\n  "data"\n  {\n    "provider" "1"\n    "player_state" "1"\n  }\n}\n`;
 
-test('Absicherung: Steam-Anmeldung im Fenster', () => {
-  assert.equal(isSteamLogin('https://steamcommunity.com/openid/login?openid.mode=checkid_setup'), true);
-  assert.equal(isSteamLogin('https://steamcommunity.com/login/home/'), true);
-  assert.equal(isSteamLogin('https://login.steampowered.com/jwt/finalizelogin'), true);
-  assert.equal(isSteamLogin('http://steamcommunity.com/openid/login'), false);
-  assert.equal(isSteamLogin('https://steamcommunity.com/id/bauer/'), false);
-  assert.equal(isSteamLogin('https://steamcommunity.com/openidx'), false);
-  assert.equal(isSteamLogin('https://steamcommunity.com:8443/openid/login'), false);
-  assert.equal(isSteamLogin('https://x@steamcommunity.com/openid/login'), false);
-  assert.equal(isSteamLogin('https://steamcommunity.com.evil.example/openid/login'), false);
-  assert.equal(isSteamLogin('https://store.steampowered.com/'), false);
-  assert.equal(isSteamLogin('file:///openid/'), false);
+test('Absicherung: Steam-Anmeldung ist keine eigene Seite (geht in den Browser)', () => {
   assert.equal(isOwn('https://steamcommunity.com/openid/login'), false);
+  assert.equal(isOwn('https://login.steampowered.com/'), false);
 });
 
 test('Absicherung: GSI-Datei von der Website', () => {

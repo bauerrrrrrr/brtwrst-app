@@ -8,8 +8,6 @@ if (own) {
   contextBridge.exposeInMainWorld('brtwrst', {
     version: ipcRenderer.sendSync('brtwrst:version'),
     platform: process.platform,
-    /** Steam-Anmeldung läuft im App-Fenster (ab 0.2.1) */
-    steamLogin: true,
     /** Befehle per RCON ausführen → { ok, results: [{cmd, out}], error? } */
     rcon: (addr, pass, cmds) => ipcRenderer.invoke('brtwrst:rcon', { addr, pass, cmds }),
     /** Server im LAN abfragen + Mappool → { names: {id: name}, maps: [] } */

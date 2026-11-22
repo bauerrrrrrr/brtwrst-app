@@ -12,7 +12,7 @@ Die App ist ein Rahmen um die Website <https://brat.wurst.pw/lan/>. Inhalte, Log
 - **Nur eigene Seiten:** Die Schnittstelle `window.brtwrst` gibt es nur auf `https://brat.wurst.pw/lan/`. Der Hauptprozess prüft die Herkunft jedes Aufrufs zusätzlich selbst.
 - **Nur LAN:** RCON und Scan gehen nur an private Adressen (10/8, 172.16/12, 192.168/16, 127/8) im Format `IP:Port`.
 - **Saubere Befehle:** Sie werden als Text übergeben, ohne Zeilenumbrüche, höchstens 200 pro Aufruf.
-- **Fremde Links:** Sie öffnen sich im System-Browser, nicht im App-Fenster. Ausnahme: die Steam-Anmeldung der Website (nur Steam-Login-Seiten, ohne Zugriff auf die App-Funktionen; Esc bricht ab).
+- **Fremde Links:** Sie öffnen sich im System-Browser, nicht im App-Fenster. Auch die Steam-Anmeldung läuft im Browser; danach gibt man dort die App frei, und die App meldet sich selbst an.
 - **Berechtigungen:** Kamera, Mikrofon und Co. bekommt keine Seite. Unsere Seiten dürfen nur in die Zwischenablage schreiben.
 - **Isolation:** Das Fenster läuft isoliert (`contextIsolation`, `sandbox`, kein `nodeIntegration`).
 

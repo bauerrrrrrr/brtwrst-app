@@ -14,19 +14,6 @@ function isOwn(url) {
   catch { return false; }
 }
 
-/**
- * Steam-Anmeldung (OpenID) für den Login der Website: darf im Hauptfenster laufen statt im Browser.
- * Nur https ohne Zugangsdaten in der URL: steamcommunity.com/openid/… und /login/…, login.steampowered.com.
- */
-function isSteamLogin(url) {
-  try {
-    const u = new URL(url);
-    if (u.protocol !== 'https:' || u.username || u.password || u.port) return false;
-    if (u.hostname === 'steamcommunity.com') return u.pathname.startsWith('/openid/') || u.pathname.startsWith('/login/');
-    return u.hostname === 'login.steampowered.com';
-  } catch { return false; }
-}
-
 /** Nur private/lokale IPv4-Adressen mit Port: 10/8, 172.16/12, 192.168/16, 127/8. */
 function isLanAddr(addr) {
   const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3}):(\d{1,5})$/.exec(String(addr));
@@ -64,4 +51,4 @@ function validCmds(cmds) {
     cmds.every(c => typeof c === 'string' && c.length >= 1 && c.length <= 512 && !/[\r\n\0]/.test(c));
 }
 
-module.exports = { START_URL, isOwn, isSteamLogin, isLanAddr, isGsiTarget, validCmds, validGsiCfg };
+module.exports = { START_URL, isOwn, isLanAddr, isGsiTarget, validCmds, validGsiCfg };
