@@ -92,6 +92,7 @@ ipcMain.handle('brtwrst:gsi-install', async (e, { token, cfg } = {}) => {
   if (!validGsiCfg(cfg, token)) return { ok: false, error: 'Ungültige GSI-Datei' };
   return gsi.install(cfg);
 });
+ipcMain.handle('brtwrst:gsi-remove', e => fromOwn(e) ? gsi.remove() : { ok: false, error: 'Nicht erlaubt' });
 ipcMain.handle('brtwrst:gsi-update', async (e, { token, cfg } = {}) => {
   if (!fromOwn(e)) return { ok: false, error: 'Nicht erlaubt' };
   if (typeof token !== 'string' || !/^[A-Za-z0-9._~-]{8,200}$/.test(token)) return { ok: false, error: 'Ungültiger Schlüssel' };

@@ -39,3 +39,15 @@ test('GSI: Aktualisieren ändert nur vorhandene Dateien', () => {
   r = gsi.update(neu, [a, b]);
   assert.deepEqual([r.updated, r.unchanged], [[], 1], 'gleicher Inhalt → nichts schreiben');
 });
+
+test('GSI: Entfernen löscht nur unsere Datei', () => {
+  const t = fs.mkdtempSync(path.join(os.tmpdir(), 'steam-'));
+  const d = path.join(t, 'A', 'steamapps', 'common', 'Counter-Strike Global Offensive', 'game', 'csgo', 'cfg');
+  fs.mkdirSync(d, { recursive: true });
+  fs.writeFileSync(path.join(d, gsi.FILE), 'x'); fs.writeFileSync(path.join(d, 'gamestate_integration_anderes.cfg'), 'y');
+  let r = gsi.remove([path.join(t, 'A')]);
+  assert.deepEqual([r.ok, r.removed.length], [true, 1]);
+  assert.deepEqual(fs.readdirSync(d), ['gamestate_integration_anderes.cfg']);
+  r = gsi.remove([path.join(t, 'A')]);
+  assert.deepEqual(r, { ok: true, removed: [] });
+});

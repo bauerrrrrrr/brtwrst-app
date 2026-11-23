@@ -71,4 +71,16 @@ function update(cfg, roots) {
   return { ok: true, updated, unchanged };
 }
 
-module.exports = { cfgDirs, install, update, FILE };
+/** Unsere GSI-Datei aus allen CS2-cfg-Ordnern löschen (GSI ist aus, solange kein Relay läuft). → { ok, removed: [Pfade] } */
+function remove(roots) {
+  if (process.platform === 'darwin' && !roots) return { ok: true, removed: [] };
+  const removed = [];
+  for (const d of cfgDirs(roots)) {
+    const f = path.join(d, FILE);
+    if (!fs.existsSync(f)) continue;
+    try { fs.unlinkSync(f); removed.push(f); } catch (e) { return { ok: false, error: `Löschen nicht möglich (${f}): ${e.message}`, removed }; }
+  }
+  return { ok: true, removed };
+}
+
+module.exports = { cfgDirs, install, update, remove, FILE };

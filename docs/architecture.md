@@ -32,6 +32,7 @@ flowchart LR
   `libraryfolders.vdf`, schreibt `gamestate_integration_brtwrst.cfg` in jeden gefundenen CS2-cfg-Ordner. Den Inhalt
   liefert die Website; `validGsiCfg` (`src/guard.js`) prüft Format, Schlüssel und Ziel.
   `update()` zieht nur vorhandene Dateien nach (Bridge `updateGsi`, z. B. bei neuer Relay-Adresse) und legt keine neuen an.
+  `remove()` löscht nur diese Datei (Bridge `removeGsi`, wenn kein Relay aktiv ist).
 - **GSI-Relay** (`src/relay.js`, IPC `brtwrst:gsi-relay`/`-status` in `src/main.js`): HTTP-Server auf `0.0.0.0:<port>`
   im Hauptprozess, prüft `auth.token`, sammelt die Meldungen und schickt etwa jede Sekunde ein Bündel an
   `START_URL` + `gsi.php` (Format in `docs/integration.md`); ohne Meldungen alle 30 s ein Lebenszeichen, bei Fehlern
