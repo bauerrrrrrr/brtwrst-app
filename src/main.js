@@ -92,6 +92,12 @@ ipcMain.handle('brtwrst:gsi-install', async (e, { token, cfg } = {}) => {
   if (!validGsiCfg(cfg, token)) return { ok: false, error: 'Ungültige GSI-Datei' };
   return gsi.install(cfg);
 });
+ipcMain.handle('brtwrst:gsi-update', async (e, { token, cfg } = {}) => {
+  if (!fromOwn(e)) return { ok: false, error: 'Nicht erlaubt' };
+  if (typeof token !== 'string' || !/^[A-Za-z0-9._~-]{8,200}$/.test(token)) return { ok: false, error: 'Ungültiger Schlüssel' };
+  if (!validGsiCfg(cfg, token)) return { ok: false, error: 'Ungültige GSI-Datei' };
+  return gsi.update(cfg);
+});
 
 // GSI-Relay (src/relay.js): Meldungen der Spieler im LAN annehmen, gebündelt an gsi.php weitergeben.
 let relay = null;

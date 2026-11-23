@@ -42,6 +42,7 @@ Keine Bridge-Funktion; die Website nutzt nur, dass die App fremde Adressen aus `
 | `scan(list)` | `list = [[id, "ip:port"], …]` → `{ names: {id: name}, maps: [...], error? }` | `assets/rcon-exec.js` („Server laden“) |
 | `players(addr)` | → `{ ok, players: [{name, score, time}], error? }` (A2S_PLAYER, `score` meist Kills) | `assets/rcon-exec.js` (`sendSrv`: Kills gehen per `rcon_srv` an die Gegnerkacheln im Beamer) |
 | `installGsi(token, cfg)` | → `{ ok, paths: [...] }` bzw. `{ ok: false, error }`; `cfg` = Dateiinhalt von der Website | `app/pages/gsi.php` |
+| `updateGsi(token, cfg)` | → `{ ok, updated: [Pfade], unchanged }` bzw. `{ ok: false, error }`; schreibt nur dort, wo `gamestate_integration_brtwrst.cfg` schon liegt und sich der Inhalt unterscheidet; unter macOS nichts | `assets/app.js` (höchstens alle 5 min, Inhalt von `?p=gsi&appcfg=1`) |
 | `gsiRelay({ on, token, port, addr? })` | GSI-Relay starten (`on: true`) bzw. beenden (`on: false`) → Status wie `gsiRelayStatus` oder `{ ok: false, error }` | `app/pages/gsi.php` (nur Admins) |
 | `gsiRelayStatus()` | → `{ ok, on, addrs: ["192.168.…"], uri?, port?, queue, received, rejected, forwarded, batches, lastOk, lastError, senders: {steamid: {name, ts}} }` (Zeiten in ms) | `app/pages/gsi.php` |
 
@@ -54,6 +55,7 @@ Keine Bridge-Funktion; die Website nutzt nur, dass die App fremde Adressen aus `
   ohne `\r`/`\0`, erste Zeile `"BRTWRST Beamer"`, nur VDF-Zeilen (`"Schlüssel"`, `"Schlüssel" "Wert"`, `{`, `}`),
   genau ein `uri` mit `http(s)` zu einer eigenen Seite (`isOwn`) oder zu einer LAN-IPv4 wie oben, enthält
   `"token" "<token>"`. Fehlt `cfg`: Fehler „Die Seite ist veraltet …“.
+- `updateGsi`: `token` und `cfg` wie bei `installGsi`.
 - `gsiRelay`: `token` wie bei `installGsi`; `port` ganzzahlig 1024–65535; `addr` (optional) muss eine eigene
   LAN-IPv4 des PCs sein (`lanAddrs()` in `brtwrst-app/src/relay.js`), sonst die erste. Jeder Aufruf beendet
   einen laufenden Relay zuerst. Belegter Port → `error` „Port … ist schon belegt“.
@@ -96,10 +98,14 @@ Grund: Die Firewall des Hosters sperrt die gemeinsame LAN-IP, wenn viele Geräte
   (`live_relay_uri()`). Gespeichert in `storage/live.json` (`relay: {uri, at, seen}`). Solange die letzte Meldung
   bzw. das Eintragen höchstens 24 h her ist (`LIVE_RELAY_TTL`), zeigt die cfg auf den Relay; die App installiert sie
   unverändert (`isGsiTarget` erlaubt LAN-Ziele schon in allen Versionen).
+- Nachziehen: `?p=gsi&appcfg=1` (eingeloggt) liefert JSON `{token, cfg, uri}` mit dem aktuellen Inhalt. In der App
+  ruft `assets/app.js` das beim Seitenaufruf auf (höchstens alle 5 min, `localStorage` `gsiCheck`) und gibt es an
+  `updateGsi`; wurde etwas geändert, erscheint ein Hinweis „GSI-Datei aktualisiert … CS2 neu starten“. Heruntergeladene
+  Dateien ohne App müssen die Spieler selbst neu holen.
 
 ## Versionen und Kompatibilität
 - Die Website erkennt die App über die Existenz von `window.brtwrst` und prüft einzelne Funktionen
-  per Feature-Detection (`window.brtwrst.players`, `window.brtwrst?.installGsi`, `window.brtwrst.gsiRelay`).
+  per Feature-Detection (`window.brtwrst.players`, `window.brtwrst?.installGsi`, `window.brtwrst?.updateGsi`, `window.brtwrst.gsiRelay`).
 - Festgelegte Mindestversion (Entscheidung Betreiber, 2026-11): **0.1.7** (Auto-Update geht ab 0.1.5).
   Bei gravierenden Schnittstellenänderungen wird sie angehoben. Ist `window.brtwrst.version` älter, zeigt
   `assets/app.js` (`MIN`) auf jeder Seite einen Hinweis zum Aktualisieren; gesperrt wird nichts.

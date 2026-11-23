@@ -55,4 +55,20 @@ function install(cfg, roots) {
   return { ok: true, paths };
 }
 
-module.exports = { cfgDirs, install, FILE };
+/**
+ * Nur vorhandene GSI-Dateien auf den Stand der Website bringen (z. B. neue Relay-Adresse); legt keine neuen an.
+ * → { ok, updated: [Pfade], unchanged: Anzahl } bzw. { ok: false, error }
+ */
+function update(cfg, roots) {
+  if (process.platform === 'darwin' && !roots) return { ok: true, updated: [], unchanged: 0 };
+  const updated = []; let unchanged = 0;
+  for (const d of cfgDirs(roots)) {
+    const f = path.join(d, FILE);
+    let old; try { old = fs.readFileSync(f, 'utf8'); } catch { continue; }   // hier nicht installiert
+    if (old === cfg) { unchanged++; continue; }
+    try { fs.writeFileSync(f, cfg); updated.push(f); } catch (e) { return { ok: false, error: `Schreiben nicht möglich (${f}): ${e.message}` }; }
+  }
+  return { ok: true, updated, unchanged };
+}
+
+module.exports = { cfgDirs, install, update, FILE };

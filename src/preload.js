@@ -16,6 +16,8 @@ if (own) {
     players: addr => ipcRenderer.invoke('brtwrst:players', { addr }),
     /** GSI-Datei (Inhalt von der Website) in alle gefundenen CS2-cfg-Ordner legen → { ok, paths } */
     installGsi: (token, cfg) => ipcRenderer.invoke('brtwrst:gsi-install', { token, cfg }),
+    /** Vorhandene GSI-Dateien auf diesen Inhalt bringen, keine neuen anlegen → { ok, updated: [Pfade], unchanged } */
+    updateGsi: (token, cfg) => ipcRenderer.invoke('brtwrst:gsi-update', { token, cfg }),
     /** GSI-Relay starten ({ on: true, token, port, addr? }) bzw. beenden ({ on: false }) → Status wie gsiRelayStatus */
     gsiRelay: opts => ipcRenderer.invoke('brtwrst:gsi-relay', opts),
     /** → { ok, on, addrs, uri?, port?, queue, received, rejected, forwarded, batches, lastOk, lastError, senders } */
