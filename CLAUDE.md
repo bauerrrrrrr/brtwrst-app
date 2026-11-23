@@ -2,7 +2,7 @@
 
 **BRTWRST**: Electron-App für Windows, Linux und macOS (nur arm64). Sie ist ein Rahmen um die Website
 https://brat.wurst.pw/lan/ und gibt deren Seiten über `window.brtwrst` Fähigkeiten, die ein Browser
-nicht hat: RCON (TCP) und A2S-Scan (UDP) zu CS2-Servern im LAN, A2S-Spielerliste, GSI-Datei installieren.
+nicht hat: RCON (TCP) und A2S-Scan (UDP) zu CS2-Servern im LAN, A2S-Spielerliste, GSI-Datei installieren, GSI-Relay.
 Die App hat keine eigene Oberfläche, Login oder Daten – alles kommt von der Website.
 
 **Zweites Repo:** `teambratwurst` (PHP-Website). Schnittstelle: `docs/integration.md`
@@ -39,18 +39,19 @@ npm run dist:linux | dist:win | dist:mac      # Pakete nach dist/
 | `src/guard.js` | `START_URL`, erlaubte Origins (`isOwn`), LAN-Adressen, Befehlsprüfung |
 | `src/rcon.js` / `src/scan.js` | Source-RCON-Client / A2S_INFO-Scan, Mappool, A2S_PLAYER |
 | `src/gsi.js` | GSI-cfg (Inhalt von der Website) in CS2-cfg-Ordner aller Steam-Bibliotheken schreiben |
+| `src/relay.js` | GSI-Relay: HTTP-Empfänger im LAN, bündelt Meldungen (~1 POST/s) an `gsi.php` |
 | `src/updater.js`, `src/update-key.js` | Signierte Updates (Manifest + Ed25519), Tausch je Plattform |
 | `src/flatpak.js`, `src/dbus.js` | Flatpak-Update über das Portal, eigener D-Bus-Client |
 | `src/offline.html` | Fehlerseite, wenn die Website nicht lädt |
 | `scripts/` | `manifest.js` (Release-Manifest signieren), `flatpak-build.sh`, `versions.js` (Versionsprüfung) |
 | `flatpak/`, `build/` | Flatpak-Manifest/Starter/Metainfo/GPG-Pubkey; Icons |
-| `test/` | Tests (RCON, Scan, GSI, Updater, Flatpak, macOS-Tausch) |
+| `test/` | Tests (RCON, Scan, GSI, GSI-Relay, Updater, Flatpak, macOS-Tausch) |
 
 ## Konventionen
 - Kommentare, Fehlermeldungen und Dialoge auf Deutsch.
 - Jeder neue IPC-Handler prüft zuerst `fromOwn(e)` und validiert alle Argumente in `src/guard.js`-Manier;
   Fehler als `{ ok: false, error }` zurückgeben, nicht werfen.
-- Netzwerkziele der Bridge nur private IPv4-Adressen (`isLanAddr`).
+- Netzwerkziele der Bridge nur private IPv4-Adressen (`isLanAddr`); einzige Ausnahme: der GSI-Relay sendet an `gsi.php` von `START_URL`.
 - Neue Bridge-Funktion = Schnittstellenänderung → `docs/integration.md` hier **und** in teambratwurst anpassen;
   die Website nutzt sie nur per Feature-Detection.
 

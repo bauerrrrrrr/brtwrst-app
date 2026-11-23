@@ -1,6 +1,6 @@
 # Offene Punkte – brtwrst-app
 
-Stand: 2026-11-22 (0.2.2).
+Stand: 2026-11-23 (0.2.2).
 
 ## Einschränkungen
 - Keine Code-Signatur (Windows), macOS nur ad-hoc signiert → Warnungen beim ersten Start.
@@ -21,7 +21,8 @@ Stand: 2026-11-22 (0.2.2).
   `actions/download-artifact@v8`, `DEP0040 punycode` im Flatpak-Job (Pages-Actions). Nicht unser Code.
 
 ## Offene Fragen
-- **403 durch Rate-Limit des Hosters?** Während eines CS2-Matches (2026-11-21) wurde die eigene IP für
-  brat.wurst.pw gesperrt (nginx: „access forbidden by rule“). Vermutete Ursache: GSI-POSTs der von
-  `src/gsi.js` erzeugten cfg (`throttle 0.25`). Offen: Grenze beim Hoster erfragen; Details in
+- **403 durch Firewall des Hosters (GSI):** Während eines CS2-Matches (2026-11-21) wurde die eigene IP für
+  brat.wurst.pw gesperrt (nginx: „access forbidden by rule“); der Hoster bestätigte gleichzeitige Aufrufe mehrerer
+  Geräte als Ursache, eine Ausnahme gibt es nicht. Umgehung: GSI-Relay (`src/relay.js`), noch nicht auf einer LAN
+  erprobt (Windows-Firewall-Frage beim ersten Start, feste IP des Relay-PCs). Details in
   `teambratwurst/docs/open-points.md`.

@@ -1,6 +1,6 @@
 # Integration Website ↔ BRTWRST-App
 
-> Kopie, Quelle: teambratwurst (`docs/integration.md`), Stand: 2026-11-22, App 0.2.2.
+> Kopie, Quelle: teambratwurst (`docs/integration.md`), Stand: 2026-11-23, App 0.2.2 + GSI-Relay (noch nicht veröffentlicht).
 > Änderungen zuerst in teambratwurst vornehmen und hierher kopieren.
 
 **Quelle der Wahrheit:** diese Datei (`teambratwurst/docs/integration.md`).
@@ -11,7 +11,8 @@ Die App (Electron) lädt die Website `https://brat.wurst.pw/lan/` in ihr Fenster
 `START_URL`). Inhalte, Login und Daten kommen ausschließlich von der Website. Die App fügt nur Fähigkeiten
 hinzu, die ein Browser nicht hat, über das Objekt `window.brtwrst` (`brtwrst-app/src/preload.js`).
 Es gibt **keine** HTTP-API der Website speziell für die App; die App spricht nur mit
-CS2-Servern im LAN, GitHub (Updates) und dem lokalen Dateisystem (GSI-Datei).
+CS2-Servern im LAN, GitHub (Updates), dem lokalen Dateisystem (GSI-Datei) und – als GSI-Relay – mit `gsi.php`
+(dasselbe Format wie CS2, nur gebündelt, siehe „GSI-Relay“).
 
 ## Wer bekommt `window.brtwrst`?
 - Nur Seiten, deren URL `isOwn()` erfüllt (`brtwrst-app/src/guard.js`):
@@ -41,6 +42,8 @@ Keine Bridge-Funktion; die Website nutzt nur, dass die App fremde Adressen aus `
 | `scan(list)` | `list = [[id, "ip:port"], …]` → `{ names: {id: name}, maps: [...], error? }` | `assets/rcon-exec.js` („Server laden“) |
 | `players(addr)` | → `{ ok, players: [{name, score, time}], error? }` (A2S_PLAYER, `score` meist Kills) | `assets/rcon-exec.js` (`sendSrv`: Kills gehen per `rcon_srv` an die Gegnerkacheln im Beamer) |
 | `installGsi(token, cfg)` | → `{ ok, paths: [...] }` bzw. `{ ok: false, error }`; `cfg` = Dateiinhalt von der Website | `app/pages/gsi.php` |
+| `gsiRelay({ on, token, port, addr? })` | GSI-Relay starten (`on: true`) bzw. beenden (`on: false`) → Status wie `gsiRelayStatus` oder `{ ok: false, error }` | `app/pages/gsi.php` (nur Admins) |
+| `gsiRelayStatus()` | → `{ ok, on, addrs: ["192.168.…"], uri?, port?, queue, received, rejected, forwarded, batches, lastOk, lastError, senders: {steamid: {name, ts}} }` (Zeiten in ms) | `app/pages/gsi.php` |
 
 ### Validierung in der App (`brtwrst-app/src/guard.js`, `src/main.js`)
 - `addr`: `IPv4:Port`, nur 10/8, 172.16/12, 192.168/16, 127/8.
@@ -51,6 +54,9 @@ Keine Bridge-Funktion; die Website nutzt nur, dass die App fremde Adressen aus `
   ohne `\r`/`\0`, erste Zeile `"BRTWRST Beamer"`, nur VDF-Zeilen (`"Schlüssel"`, `"Schlüssel" "Wert"`, `{`, `}`),
   genau ein `uri` mit `http(s)` zu einer eigenen Seite (`isOwn`) oder zu einer LAN-IPv4 wie oben, enthält
   `"token" "<token>"`. Fehlt `cfg`: Fehler „Die Seite ist veraltet …“.
+- `gsiRelay`: `token` wie bei `installGsi`; `port` ganzzahlig 1024–65535; `addr` (optional) muss eine eigene
+  LAN-IPv4 des PCs sein (`lanAddrs()` in `brtwrst-app/src/relay.js`), sonst die erste. Jeder Aufruf beendet
+  einen laufenden Relay zuerst. Belegter Port → `error` „Port … ist schon belegt“.
 - Fehler kommen als Objekt mit `ok: false` / `error` (deutsch), nicht als Exception.
 
 ## RCON-Konventionen (beide Seiten)
@@ -62,11 +68,11 @@ Keine Bridge-Funktion; die Website nutzt nur, dass die App fremde Adressen aus `
   `rcon_srv` (Spielerliste des gewählten Servers alle 5 s → `storage/live.json`, für den Beamer).
 
 ## GSI (Game State Integration)
-- Empfänger: `gsi.php`. Liest den Request-Body als JSON (höchstens 200 000 Bytes, Rest wird abgeschnitten; die
+- Empfänger: `gsi.php`. Liest den Request-Body als JSON (höchstens 4 000 000 Bytes, Rest wird abgeschnitten; die
   HTTP-Methode wird nicht geprüft). Config-Pfad alternativ über `TBW_CONFIG`. Auth: `auth.token` muss `gsi_token` aus `config.php`
-  entsprechen, sonst HTTP 403. Ohne Session und ohne DB; schreibt `storage/live.json`.
+  entsprechen, sonst HTTP 403. Ohne Session und ohne DB; schreibt `storage/live.json` (`live_ingest()` in `app/live.php`).
 - Die cfg-Datei `gamestate_integration_brtwrst.cfg` baut nur die Website: `app/pages/gsi.php` (`$gsiCfg`),
-  URI = `gsi_url` aus der Config **oder** aus Host + Pfad abgeleitet. Dieselbe Datei gibt es als Download und
+  URI = eingetragener GSI-Relay (siehe unten) **oder** `gsi_url` aus der Config **oder** aus Host + Pfad abgeleitet. Dieselbe Datei gibt es als Download und
   geht als `cfg` an `installGsi`; die App schreibt sie unverändert (`brtwrst-app/src/gsi.js`).
   - Felder: Name `"BRTWRST Beamer"`, `timeout 5.0`, `buffer 0.1`, `throttle 0.25`, `heartbeat 10.0`,
     `data`: `provider, map, round, player_id, player_state, player_weapons, player_match_stats, player_position, phase_countdowns`.
@@ -74,9 +80,26 @@ Keine Bridge-Funktion; die Website nutzt nur, dass die App fremde Adressen aus `
 - Die App sucht Steam-Bibliotheken (Registry bzw. bekannte Linux-Pfade + `libraryfolders.vdf`) und schreibt in
   jeden gefundenen `…/Counter-Strike Global Offensive/game/csgo/cfg/`. Unter macOS lehnt sie ab.
 
+### GSI-Relay (App ab der ersten Version mit `gsiRelay`)
+Grund: Die Firewall des Hosters sperrt die gemeinsame LAN-IP, wenn viele Geräte gleichzeitig an `gsi.php` senden
+(`docs/open-points.md`). Der Relay bündelt das auf etwa eine Anfrage pro Sekunde.
+- App (`brtwrst-app/src/relay.js`): HTTP-Empfänger auf `0.0.0.0:<port>`, nimmt POSTs (JSON, höchstens 200 000 Bytes,
+  `auth.token` = Token aus `gsiRelay`, sonst 403) an jedem Pfad an. Etwa jede Sekunde, wenn etwas vorliegt, ein POST an
+  `gsi.php` der Website (`START_URL` + `gsi.php`):
+  `{ "auth": {"token": …}, "relay": "http://<LAN-IP>:<port>/", "batch": [{ "age_ms": …, "m": <CS2-Meldung ohne auth> }, …] }`
+  (höchstens 400 Meldungen, Reihenfolge wie empfangen). Ohne Meldungen alle 30 s ein leeres Bündel (Lebenszeichen),
+  ebenso direkt beim Start. Bei Fehlern Backoff 2–30 s; staut es sich, bleibt je Spieler nur die jüngste Meldung.
+- `gsi.php`/`live_ingest()`: wendet jede Meldung mit ihrem Empfangszeitpunkt (`jetzt − age_ms`) über `live_apply()`
+  an; Sender bekommen `via: relay` (sonst `direkt`). Passt `relay` zur eingetragenen Adresse, wird `relay.seen` aktualisiert.
+- Eintragen nur durch Admins: `app/pages/gsi.php` startet den Relay per `gsiRelay` und schickt dann POST
+  `action=relay_on` (CSRF, `is_admin()`) mit `uri`; `relay_off` trägt aus. Erlaubt ist nur `http://<private IPv4>:<1024–65535>/`
+  (`live_relay_uri()`). Gespeichert in `storage/live.json` (`relay: {uri, at, seen}`). Solange die letzte Meldung
+  bzw. das Eintragen höchstens 24 h her ist (`LIVE_RELAY_TTL`), zeigt die cfg auf den Relay; die App installiert sie
+  unverändert (`isGsiTarget` erlaubt LAN-Ziele schon in allen Versionen).
+
 ## Versionen und Kompatibilität
 - Die Website erkennt die App über die Existenz von `window.brtwrst` und prüft einzelne Funktionen
-  per Feature-Detection (`window.brtwrst.players`, `window.brtwrst?.installGsi`).
+  per Feature-Detection (`window.brtwrst.players`, `window.brtwrst?.installGsi`, `window.brtwrst.gsiRelay`).
 - Festgelegte Mindestversion (Entscheidung Betreiber, 2026-11): **0.1.7** (Auto-Update geht ab 0.1.5).
   Bei gravierenden Schnittstellenänderungen wird sie angehoben. Ist `window.brtwrst.version` älter, zeigt
   `assets/app.js` (`MIN`) auf jeder Seite einen Hinweis zum Aktualisieren; gesperrt wird nichts.

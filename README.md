@@ -14,6 +14,7 @@ Die App ist ein Rahmen um die Website <https://brat.wurst.pw/lan/>. Inhalte, Log
 - **Saubere Befehle:** Sie werden als Text übergeben, ohne Zeilenumbrüche, höchstens 200 pro Aufruf.
 - **Fremde Links:** Sie öffnen sich im System-Browser, nicht im App-Fenster. Auch die Steam-Anmeldung läuft im Browser; danach gibt man dort die App frei, und die App meldet sich selbst an.
 - **Berechtigungen:** Kamera, Mikrofon und Co. bekommt keine Seite. Unsere Seiten dürfen nur in die Zwischenablage schreiben.
+- **GSI-Relay:** Nur wenn ein Admin ihn auf der GSI-Seite startet, öffnet die App einen Port im LAN (Standard 3080) und nimmt dort nur GSI-Meldungen mit dem richtigen Schlüssel an. Weitergeleitet wird ausschließlich an `gsi.php` der eigenen Website.
 - **Isolation:** Das Fenster läuft isoliert (`contextIsolation`, `sandbox`, kein `nodeIntegration`).
 
 ## Schnittstelle für die Website
@@ -35,7 +36,7 @@ if (window.brtwrst) {
 npm install
 npm start                                   # lädt https://brat.wurst.pw/lan/
 BRTWRST_URL=http://127.0.0.1:8099/ npm start  # gegen eine lokale Testversion der Website
-npm test                                    # RCON, Scan und Absicherung gegen einen simulierten Server
+npm test                                    # RCON, Scan, GSI-Relay und Absicherung gegen simulierte Gegenstellen
 npm run dist:linux                          # AppImage in dist/
 npm run dist:win                            # Windows-Installer in dist/
 ```
@@ -50,6 +51,7 @@ npm run dist:win                            # Windows-Installer in dist/
 | `src/rcon.js` | Source-RCON-Client, eine Verbindung pro Auftrag, lange Antworten über mehrere Pakete |
 | `src/scan.js` | A2S-Scan und Mappool |
 | `src/gsi.js` | GSI-Datei in die CS2-cfg-Ordner legen |
+| `src/relay.js` | GSI-Relay: Meldungen der Spieler im LAN annehmen, gebündelt an die Website weitergeben |
 | `src/updater.js` | signierte Updates (Windows, AppImage) |
 | `src/flatpak.js`, `src/dbus.js` | Update im Flatpak über das Flatpak-Portal (eigener kleiner D-Bus-Client) |
 | `flatpak/` | Flatpak-Manifest, Starter, Metainfo, öffentlicher GPG-Schlüssel des Repos |

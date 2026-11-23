@@ -9,6 +9,7 @@ const rcon = require('./rcon');
 const { scan, a2sPlayers } = require('./scan');
 const updater = require('./updater');
 const gsi = require('./gsi');
+const { createRelay, lanAddrs } = require('./relay');
 const flatpak = require('./flatpak');
 
 // AppImage: Viele Distributionen (z. B. Ubuntu 24.04) erlauben die Chromium-Sandbox ohne Installation nicht.
@@ -91,6 +92,28 @@ ipcMain.handle('brtwrst:gsi-install', async (e, { token, cfg } = {}) => {
   if (!validGsiCfg(cfg, token)) return { ok: false, error: 'Ungültige GSI-Datei' };
   return gsi.install(cfg);
 });
+
+// GSI-Relay (src/relay.js): Meldungen der Spieler im LAN annehmen, gebündelt an gsi.php weitergeben.
+let relay = null;
+const relayStatus = () => ({ ok: true, addrs: lanAddrs(), ...(relay ? relay.status() : { on: false }) });
+ipcMain.handle('brtwrst:gsi-relay', async (e, { on, token, port, addr } = {}) => {
+  if (!fromOwn(e)) return { ok: false, error: 'Nicht erlaubt' };
+  if (relay) { await relay.stop(); relay = null; }
+  if (!on) return relayStatus();
+  if (typeof token !== 'string' || !/^[A-Za-z0-9._~-]{8,200}$/.test(token)) return { ok: false, error: 'Ungültiger Schlüssel' };
+  if (!Number.isInteger(port) || port < 1024 || port > 65535) return { ok: false, error: 'Port muss zwischen 1024 und 65535 liegen' };
+  const addrs = lanAddrs();
+  if (!addrs.length) return { ok: false, error: 'Dieser PC hat keine LAN-Adresse (10.x, 172.16–31.x, 192.168.x).' };
+  if (addr !== undefined && !addrs.includes(addr)) return { ok: false, error: 'Adresse gehört nicht zu diesem PC' };
+  const r = createRelay({ token, port, uri: `http://${addr || addrs[0]}:${port}/`, target: new URL('gsi.php', START_URL).href });
+  try { await r.start(); } catch (err) {
+    return { ok: false, error: err.code === 'EADDRINUSE' ? `Port ${port} ist schon belegt` : `Start nicht möglich: ${err.message}` };
+  }
+  relay = r;
+  return relayStatus();
+});
+ipcMain.handle('brtwrst:gsi-relay-status', e => fromOwn(e) ? relayStatus() : { ok: false, error: 'Nicht erlaubt' });
+app.on('before-quit', () => { relay?.stop(); });
 
 // ---------- Updates (signiert, über GitHub Releases) ----------
 const RELEASES = 'https://github.com/bauerrrrrrr/brtwrst-app/releases/latest';
