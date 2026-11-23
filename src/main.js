@@ -1,6 +1,6 @@
 // BRTWRST – Rahmen um das Team-Bratwurst-Intranet mit direktem RCON und LAN-Scan.
 'use strict';
-const { app, BrowserWindow, ipcMain, shell, Menu, session, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Menu, session, dialog, Notification } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
@@ -91,6 +91,17 @@ ipcMain.handle('brtwrst:gsi-install', async (e, { token, cfg } = {}) => {
   if (cfg === undefined) return { ok: false, error: 'Die Seite ist veraltet. Bitte neu laden (Strg+R) oder die Datei herunterladen.' };
   if (!validGsiCfg(cfg, token)) return { ok: false, error: 'Ungültige GSI-Datei' };
   return gsi.install(cfg);
+});
+// Systembenachrichtigung (z. B. GSI an/aus), damit man sie auch sieht, während CS2 im Vordergrund ist.
+ipcMain.handle('brtwrst:notify', (e, { title, body } = {}) => {
+  if (!fromOwn(e)) return { ok: false, error: 'Nicht erlaubt' };
+  const ok = (s, n) => typeof s === 'string' && s.length >= 1 && s.length <= n && !/[\0\r]/.test(s);
+  if (!ok(title, 100) || !ok(body, 300)) return { ok: false, error: 'Ungültiger Text' };
+  if (!Notification.isSupported()) return { ok: false, error: 'Benachrichtigungen werden nicht unterstützt' };
+  const n = new Notification({ title, body });
+  n.on('click', () => { if (win) { if (win.isMinimized()) win.restore(); win.show(); win.focus(); } });
+  n.show();
+  return { ok: true };
 });
 ipcMain.handle('brtwrst:gsi-remove', e => fromOwn(e) ? gsi.remove() : { ok: false, error: 'Nicht erlaubt' });
 ipcMain.handle('brtwrst:gsi-update', async (e, { token, cfg } = {}) => {
@@ -228,6 +239,7 @@ function menu() {
 }
 
 app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
+if (process.platform === 'win32') app.setAppUserModelId('pw.wurst.brat.brtwrst');   // sonst keine Windows-Benachrichtigungen
 app.whenReady().then(() => {
   permissions(); menu(); createWindow();
   if (app.isPackaged || process.env.BRTWRST_UPDATE_URL) {

@@ -1,6 +1,6 @@
 # Integration Website ↔ BRTWRST-App
 
-> Kopie, Quelle: teambratwurst (`docs/integration.md`), Stand: 2026-11-23, App 0.2.2 + GSI-Relay (noch nicht veröffentlicht).
+> Kopie, Quelle: teambratwurst (`docs/integration.md`), Stand: 2026-11-23, App 0.2.3.
 > Änderungen zuerst in teambratwurst vornehmen und hierher kopieren.
 
 **Quelle der Wahrheit:** diese Datei (`teambratwurst/docs/integration.md`).
@@ -43,6 +43,7 @@ Keine Bridge-Funktion; die Website nutzt nur, dass die App fremde Adressen aus `
 | `players(addr)` | → `{ ok, players: [{name, score, time}], error? }` (A2S_PLAYER, `score` meist Kills) | `assets/rcon-exec.js` (`sendSrv`: Kills gehen per `rcon_srv` an die Gegnerkacheln im Beamer) |
 | `installGsi(token, cfg)` | → `{ ok, paths: [...] }` bzw. `{ ok: false, error }`; `cfg` = Dateiinhalt von der Website | `app/pages/gsi.php` |
 | `updateGsi(token, cfg)` | → `{ ok, updated: [Pfade], unchanged }` bzw. `{ ok: false, error }`; schreibt nur dort, wo `gamestate_integration_brtwrst.cfg` schon liegt und sich der Inhalt unterscheidet; unter macOS nichts | `assets/app.js` (höchstens alle 5 min, Inhalt von `?p=gsi&appcfg=1`) |
+| `notify(title, body)` | → `{ ok }` bzw. `{ ok: false, error }`; Systembenachrichtigung (Titel ≤ 100, Text ≤ 300 Zeichen, ohne `\r`/`\0`); Klick holt das Fenster nach vorn | `assets/app.js` (GSI an/aus) |
 | `removeGsi()` | → `{ ok, removed: [Pfade] }` bzw. `{ ok: false, error, removed }`; löscht nur `gamestate_integration_brtwrst.cfg` in allen CS2-cfg-Ordnern; unter macOS nichts | `assets/app.js` (wenn kein Relay aktiv ist) |
 | `gsiRelay({ on, token, port, addr? })` | GSI-Relay starten (`on: true`) bzw. beenden (`on: false`) → Status wie `gsiRelayStatus` oder `{ ok: false, error }` | `app/pages/gsi.php` (nur Admins) |
 | `gsiRelayStatus()` | → `{ ok, on, addrs: ["192.168.…"], uri?, port?, queue, received, rejected, forwarded, batches, lastOk, lastError, senders: {steamid: {name, ts}} }` (Zeiten in ms) | `app/pages/gsi.php` |
@@ -85,7 +86,7 @@ Keine Bridge-Funktion; die Website nutzt nur, dass die App fremde Adressen aus `
 - Die App sucht Steam-Bibliotheken (Registry bzw. bekannte Linux-Pfade + `libraryfolders.vdf`) und schreibt in
   jeden gefundenen `…/Counter-Strike Global Offensive/game/csgo/cfg/`. Unter macOS lehnt sie ab.
 
-### GSI-Relay (App ab der ersten Version mit `gsiRelay`)
+### GSI-Relay (App ab 0.2.3)
 Grund: Die Firewall des Hosters sperrt die gemeinsame LAN-IP, wenn viele Geräte gleichzeitig an `gsi.php` senden
 (`docs/open-points.md`). Der Relay bündelt das auf etwa eine Anfrage pro Sekunde.
 - App (`brtwrst-app/src/relay.js`): HTTP-Empfänger auf `0.0.0.0:<port>`, nimmt POSTs (JSON, höchstens 200 000 Bytes,
@@ -103,14 +104,15 @@ Grund: Die Firewall des Hosters sperrt die gemeinsame LAN-IP, wenn viele Geräte
   unverändert (`isGsiTarget` erlaubt LAN-Ziele schon in allen Versionen).
 - Nachziehen: `?p=gsi&appcfg=1` (eingeloggt) liefert JSON `{token, cfg, uri}` mit dem aktuellen Inhalt, ohne aktiven
   Relay `{off: true}` (ohne `gsi_token`: `null`). Bei `off` ruft `assets/app.js` `removeGsi` auf. In der App
-  ruft `assets/app.js` das beim Seitenaufruf auf (höchstens alle 5 min, `localStorage` `gsiCheck`) und gibt es an
+  ruft `assets/app.js` das beim Seitenaufruf und danach jede Minute auf, solange die App offen ist (Takt über alle
+  Fenster per `localStorage` `gsiCheck`), und gibt es an
   `updateGsi`. Gibt es noch keine Datei (`updated` leer, `unchanged` 0), installiert es sie per `installGsi`
-  (ohne CS2 auf dem PC: Fehler, wird still ignoriert). Bei einer Änderung erscheint ein Hinweis „GSI-Datei
-  aktualisiert/installiert … CS2 neu starten“. Heruntergeladene Dateien ohne App müssen die Spieler selbst neu holen.
+  (ohne CS2 auf dem PC: Fehler, wird still ignoriert). Bei einer Änderung erscheint oben auf der Seite und per
+  `notify` „CS2 LAN Game State Integration aktiviert. … Bitte CS2 neu starten, falls es gerade läuft.“ bzw. „… deaktiviert …“. Heruntergeladene Dateien ohne App müssen die Spieler selbst neu holen.
 
 ## Versionen und Kompatibilität
 - Die Website erkennt die App über die Existenz von `window.brtwrst` und prüft einzelne Funktionen
-  per Feature-Detection (`window.brtwrst.players`, `window.brtwrst?.installGsi`, `window.brtwrst?.updateGsi`, `window.brtwrst.removeGsi`, `window.brtwrst.gsiRelay`).
+  per Feature-Detection (`window.brtwrst.players`, `window.brtwrst?.installGsi`, `window.brtwrst?.updateGsi`, `window.brtwrst.removeGsi`, `window.brtwrst.notify`, `window.brtwrst.gsiRelay`).
 - Festgelegte Mindestversion (Entscheidung Betreiber, 2026-11): **0.1.7** (Auto-Update geht ab 0.1.5).
   Bei gravierenden Schnittstellenänderungen wird sie angehoben. Ist `window.brtwrst.version` älter, zeigt
   `assets/app.js` (`MIN`) auf jeder Seite einen Hinweis zum Aktualisieren; gesperrt wird nichts.

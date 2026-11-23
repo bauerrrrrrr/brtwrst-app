@@ -18,6 +18,8 @@ if (own) {
     installGsi: (token, cfg) => ipcRenderer.invoke('brtwrst:gsi-install', { token, cfg }),
     /** Vorhandene GSI-Dateien auf diesen Inhalt bringen, keine neuen anlegen → { ok, updated: [Pfade], unchanged } */
     updateGsi: (token, cfg) => ipcRenderer.invoke('brtwrst:gsi-update', { token, cfg }),
+    /** Systembenachrichtigung zeigen (Titel ≤ 100, Text ≤ 300 Zeichen) → { ok } */
+    notify: (title, body) => ipcRenderer.invoke('brtwrst:notify', { title, body }),
     /** Unsere GSI-Datei aus allen CS2-cfg-Ordnern löschen → { ok, removed: [Pfade] } */
     removeGsi: () => ipcRenderer.invoke('brtwrst:gsi-remove'),
     /** GSI-Relay starten ({ on: true, token, port, addr? }) bzw. beenden ({ on: false }) → Status wie gsiRelayStatus */

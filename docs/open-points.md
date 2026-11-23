@@ -1,6 +1,6 @@
 # Offene Punkte – brtwrst-app
 
-Stand: 2026-11-23 (0.2.2).
+Stand: 2026-11-23 (0.2.3).
 
 ## Einschränkungen
 - Keine Code-Signatur (Windows), macOS nur ad-hoc signiert → Warnungen beim ersten Start.
