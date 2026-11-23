@@ -100,8 +100,9 @@ Grund: Die Firewall des Hosters sperrt die gemeinsame LAN-IP, wenn viele Geräte
   unverändert (`isGsiTarget` erlaubt LAN-Ziele schon in allen Versionen).
 - Nachziehen: `?p=gsi&appcfg=1` (eingeloggt) liefert JSON `{token, cfg, uri}` mit dem aktuellen Inhalt. In der App
   ruft `assets/app.js` das beim Seitenaufruf auf (höchstens alle 5 min, `localStorage` `gsiCheck`) und gibt es an
-  `updateGsi`; wurde etwas geändert, erscheint ein Hinweis „GSI-Datei aktualisiert … CS2 neu starten“. Heruntergeladene
-  Dateien ohne App müssen die Spieler selbst neu holen.
+  `updateGsi`. Gibt es noch keine Datei (`updated` leer, `unchanged` 0), installiert es sie per `installGsi`
+  (ohne CS2 auf dem PC: Fehler, wird still ignoriert). Bei einer Änderung erscheint ein Hinweis „GSI-Datei
+  aktualisiert/installiert … CS2 neu starten“. Heruntergeladene Dateien ohne App müssen die Spieler selbst neu holen.
 
 ## Versionen und Kompatibilität
 - Die Website erkennt die App über die Existenz von `window.brtwrst` und prüft einzelne Funktionen
