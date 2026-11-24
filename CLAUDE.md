@@ -66,6 +66,13 @@ npm run dist:linux | dist:win | dist:mac      # Pakete nach dist/
   `npm deny-scripts`). `electron-winstaller` ist gesperrt: nur für das Squirrel-Ziel nötig, gebaut wird NSIS.
 - Festgelegte Mindestversion für die Website-Integration: 0.1.7 (die Website zeigt älteren Apps nur einen Hinweis, `teambratwurst/assets/app.js`).
 
+## Abnahme → direkt auf `main`
+Hat der Nutzer eine Änderung abgenommen (z. B. „passt“, „einbauen“ zu einem Prototyp oder Entwurf), wird sie nach dem
+Umsetzen und mit grünem `npm test` ohne weitere Rückfrage auf `main` gepusht, **ohne** die Version zu erhöhen: Der
+Workflow baut nur, wenn es den Tag zur Version in `package.json` noch nicht gibt, ein Push ohne neue Version erreicht
+also niemanden. Die Version erhöhen und damit veröffentlichen nur nach „Release …“ (Abschnitt unten).
+Ohne Abnahme: nur auf den Arbeits-Branch pushen und im Bericht nachfragen.
+
 ## Release (nur auf ausdrückliche Anweisung, z. B. „Release 0.1.8“)
 Ein Push auf `main` mit neuer Version erreicht über Auto-Updates alle Nutzer. Ohne Anweisung die Version nicht erhöhen.
 1. **Letzten Release-Lauf auswerten:** Annotations (Warnungen, Notices, Fehler) des letzten Laufs von `release.yml`
@@ -79,6 +86,8 @@ Ein Push auf `main` mit neuer Version erreicht über Auto-Updates alle Nutzer. O
    im Bericht begründen. Kommt eine neue Art Komponente dazu (z. B. andere Paketquelle), `scripts/versions.js` erweitern.
 3. `npm test` grün (der Hook `.claude/settings.json` prüft zusätzlich jede geänderte `.js`-Datei mit `node --check`).
 4. Schnittstelle geändert? `docs/integration.md` hier und in teambratwurst aktuell, ggf. Mindestversion eintragen.
+   Ändert das Release etwas, das die Story-Tour der Website beschreibt (Beamer/CS2-Integration, RCON, Updates)? Dann
+   die App-Texte in `teambratwurst/assets/tour.js` anpassen.
 5. „Was ist neu“ in `teambratwurst/data/changelog.md`: was das Team von diesem Release merkt unter
    `## Seit App-Version …` ergänzen (nur Nutzersicht, keine Technik; Regeln in `teambratwurst/CLAUDE.md`), den
    Abschnitt in `## App-Version X.Y.Z (TT.MM.JJJJ)` umbenennen und auf teambratwurst `main` pushen. Ohne Punkte
